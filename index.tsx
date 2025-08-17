@@ -13,6 +13,10 @@ const scoreEl = document.getElementById('score')!;
 const linesEl = document.getElementById('lines')!;
 const levelEl = document.getElementById('level')!;
 const startButton = document.getElementById('start-button')!;
+const helpButton = document.getElementById('help-button')!;
+const helpModal = document.getElementById('help-modal')!;
+const closeHelpButton = document.querySelector('.close-button')!;
+
 
 // Tetrominoes (shapes and colors)
 const SHAPES = [
@@ -51,6 +55,7 @@ let score: number;
 let lines: number;
 let level: number;
 let gameOver: boolean;
+let isPaused: boolean;
 let dropCounter: number;
 let dropInterval: number;
 let lastTime: number;
@@ -67,8 +72,23 @@ function init() {
     ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
     nextCtx.scale(NEXT_CANVAS_BLOCK_SIZE, NEXT_CANVAS_BLOCK_SIZE);
 
-    startButton.addEventListener('click', startGame);
+    // Event Listeners
+    startButton.addEventListener('click', () => {
+        if (gameOver) {
+            startGame();
+            return;
+        }
+        
+        // If the game has started, this button is a pause/resume button
+        if (animationFrameId && !gameOver) {
+            togglePause();
+        } else {
+            startGame();
+        }
+    });
     document.addEventListener('keydown', handleKeyPress);
+    helpButton.addEventListener('click', showHelp);
+    closeHelpButton.addEventListener('click', hideHelp);
 }
 
 function startGame() {
@@ -80,15 +100,19 @@ function startGame() {
     lines = 0;
     level = 0;
     gameOver = false;
+    isPaused = false;
     dropCounter = 0;
     dropInterval = 1000; // 1 second
     lastTime = 0;
+    animationFrameId = 0;
     
+    hideHelp(); // Ensure help is hidden on new game
     updateUI();
     
     resetNextPiece();
     resetPiece();
     
+    startButton.textContent = 'Pause';
     animate(0);
 }
 
@@ -102,6 +126,7 @@ function resetPiece() {
     
     if (!isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y)) {
         gameOver = true;
+        startButton.textContent = 'Start Game';
     }
 }
 
@@ -117,8 +142,18 @@ function getRandomPiece() {
 }
 
 function animate(time = 0) {
+    animationFrameId = requestAnimationFrame(animate);
+    
+    if (isPaused) {
+        drawPaused();
+        return;
+    }
+
     if (gameOver) {
         drawGameOver();
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = 0; // Reset animationFrameId
+        startButton.textContent = 'Start Game';
         return;
     }
 
@@ -131,14 +166,27 @@ function animate(time = 0) {
     }
     
     draw();
-    animationFrameId = requestAnimationFrame(animate);
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawMatrix(ctx, grid, 0, 0);
+
+    // Draw Ghost Piece
+    if (!gameOver) {
+        let ghostY = currentPiece.y;
+        while (isValidMove(currentPiece.shape, currentPiece.x, ghostY + 1)) {
+            ghostY++;
+        }
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        drawMatrix(ctx, currentPiece.shape, currentPiece.x, ghostY);
+        ctx.restore();
+    }
+    
     drawMatrix(ctx, currentPiece.shape, currentPiece.x, currentPiece.y);
 }
+
 
 function drawNextPiece() {
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
@@ -164,12 +212,24 @@ function drawGameOver() {
     ctx.fillRect(0, 0, COLS, ROWS);
 
     ctx.fillStyle = 'white';
-    ctx.font = '2px "Press Start 2P"';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', COLS / 2, ROWS / 2 - 1);
-    ctx.font = '0.8px "Press Start 2P"';
-    ctx.fillText('Press Start to Play Again', COLS/2, ROWS/2 + 1);
 
+    ctx.font = '1.5px "Press Start 2P"';
+    ctx.fillText('GAME OVER', COLS / 2, ROWS / 2 - 1.5);
+
+    ctx.font = '0.7px "Press Start 2P"';
+    ctx.fillText('Press Start', COLS / 2, ROWS / 2 + 0.5);
+    ctx.fillText('to Play Again', COLS / 2, ROWS / 2 + 1.5);
+}
+
+function drawPaused() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillRect(0, 0, COLS, ROWS);
+
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.font = '1.5px "Press Start 2P"';
+    ctx.fillText('PAUSED', COLS / 2, ROWS / 2);
 }
 
 function pieceDrop() {
@@ -191,8 +251,8 @@ function pieceRotate() {
     const originalShape = currentPiece.shape;
     const rotated = rotateMatrix(originalShape);
     
-    // Basic wall kick
     let offsetX = 1;
+    // Basic wall kick logic
     if (isValidMove(rotated, currentPiece.x, currentPiece.y)) {
         currentPiece.shape = rotated;
     } else if (isValidMove(rotated, currentPiece.x + offsetX, currentPiece.y)) {
@@ -204,9 +264,7 @@ function pieceRotate() {
     }
 }
 
-
 function rotateMatrix(matrix: number[][]): number[][] {
-    // Transpose and reverse rows to rotate
     const result = matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
     return result.map(row => row.reverse());
 }
@@ -276,8 +334,52 @@ function updateUI() {
     levelEl.textContent = level.toString();
 }
 
-function handleKeyPress(event: KeyboardEvent) {
+function togglePause() {
     if (gameOver) return;
+
+    // Don't allow unpausing via keyboard if help modal is open
+    if (isPaused && !helpModal.classList.contains('hidden')) {
+        return;
+    }
+    isPaused = !isPaused;
+    startButton.textContent = isPaused ? 'Resume' : 'Pause';
+}
+
+function showHelp() {
+    if (animationFrameId && !isPaused && !gameOver) {
+        isPaused = true;
+        startButton.textContent = 'Resume';
+    }
+    helpModal.classList.remove('hidden');
+}
+
+function hideHelp() {
+    // Only unpause if the game is active and wasn't paused before help was opened
+    if (animationFrameId && !gameOver) {
+       if (startButton.textContent === 'Resume') { // Indicates game was active
+            isPaused = false;
+            startButton.textContent = 'Pause';
+        }
+    }
+    helpModal.classList.add('hidden');
+}
+
+
+function handleKeyPress(event: KeyboardEvent) {
+    // Allow pausing/unpausing anytime, unless game is over
+    if (!gameOver && (event.key === 'p' || event.key === 'P' || event.key === 'Escape')) {
+        event.preventDefault();
+        
+        // If help modal is open, Escape should close it
+        if (!helpModal.classList.contains('hidden') && event.key === 'Escape') {
+            hideHelp();
+        } else {
+            togglePause();
+        }
+        return;
+    }
+
+    if (gameOver || isPaused) return;
 
     switch (event.key) {
         case 'ArrowLeft':
@@ -296,7 +398,7 @@ function handleKeyPress(event: KeyboardEvent) {
             event.preventDefault();
             pieceRotate();
             break;
-        case ' ':
+        case ' ': // Spacebar for hard drop
             event.preventDefault();
             while (isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
                 currentPiece.y++;

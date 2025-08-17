@@ -38,8 +38,26 @@
                 <canvas id="next-canvas"></canvas>
             </div>
             <button id="start-button">Start Game</button>
+            <button id="help-button">Help</button>
         </div>
     </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>How to Play</h2>
+            <div class="controls-list">
+                <p><strong>Arrow Left:</strong> Move Left</p>
+                <p><strong>Arrow Right:</strong> Move Right</p>
+                <p><strong>Arrow Down:</strong> Soft Drop</p>
+                <p><strong>Arrow Up:</strong> Rotate</p>
+                <p><strong>Spacebar:</strong> Hard Drop</p>
+                <p><strong>P / Esc:</strong> Pause Game</p>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="index.tsx"></script>
 </body>
 </html>
