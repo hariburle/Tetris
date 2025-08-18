@@ -2,43 +2,52 @@
 
 Here is a list of potential features to elevate the game to a professional level.
 
-### 1. Core Gameplay Enhancements (The "Skill" Factor)
+### 1. Core Gameplay Enhancements
 
-These features add strategic depth and are standard in modern competitive Tetris.
+- [x] **Hold Queue:** Allows swapping the current piece with a held piece.
+- [x] **"7-Bag" Randomizer:** Guarantees fair piece distribution.
+- [x] **T-Spin Detection:** Awards bonus points for advanced T-piece maneuvers.
+- [x] **Advanced Game Timers & Stats:** Adds Sprint (40-line) and Ultra (3-minute) modes.
 
-*   **Hold Queue:** Allow the player to press a key (like 'C' or 'Shift') to swap the current piece with a "held" piece. This is a game-changer, as it lets you save a crucial I-piece for a Tetris or get rid of an awkward piece. We would add a small display box for the held piece next to the "Next" piece.
-*   **"7-Bag" Randomizer:** Instead of pure randomness, we can guarantee that the player receives one of each of the seven unique tetrominoes in every batch of seven pieces. This makes the game feel much fairer and more strategic, as it prevents long "droughts" of a needed piece.
-*   **T-Spin Detection:** This is a high-level technique in modern Tetris. We could implement logic to detect when a T-piece is spun into a tight spot ("T-Spin") and award a significant score bonus. This creates a new skill for players to master.
-*   **Advanced Game Timers & Stats:** We could add modes like:
-    *   **Sprint:** How fast can you clear 40 lines? A timer would be the main focus instead of score.
-    *   **Ultra:** How high can you score in 3 minutes? This mode emphasizes speed and efficiency.
+### 2. Visual & Audio Polish
 
-### 2. Visual & Audio Polish (The "Game Juice")
-
-This is all about making the game feel responsive, satisfying, and alive.
-
-*   **Sound Effects:** This is arguably the most impactful change we could make. Adding sounds for piece movement, rotation, hard drops, line clears (with different sounds for singles vs. a Tetris), and leveling up provides crucial player feedback.
-*   **Dynamic Background Music:** A classic, looping electronic track that speeds up slightly as the levels increase would dramatically enhance the game's atmosphere and tension.
-*   **Animations & Particle Effects:**
-    *   **Line Clear Animation:** When a line is cleared, we could make the blocks flash, break apart into particles, or have a pulse of light travel across the screen.
-    *   **Hard Drop Impact:** A subtle screen shake and a particle splash effect when a piece is hard-dropped would make the action feel more impactful.
-    *   **Piece Lock Flash:** A brief, subtle flash as a piece locks into place.
+- [x] **Sound Effects:** Fully implemented. The game will play sounds if the audio files are present.
+- [ ] **Dynamic Background Music:**
+- [x] **Animations & Particle Effects:**
+    - [x] **Line Clear Animation:** Implemented (flashing lines).
+    - [x] **Hard Drop Impact:** Screen shake was implemented and removed as it was annoying.
+    - [x] **Piece Lock Flash:** Implemented (brief white flash).
 
 ### 3. UI/UX and Quality-of-Life Features
 
-These features make the game more user-friendly and complete.
+- [x] **Main Menu:** Implemented with options for game modes, settings, and high scores.
+- [x] **Settings Page:** Implemented with controls for:
+    - [x] **Volume Controls:**
+    - [ ] **Customizable Controls:**
+    - [x] **Ghost Piece Toggle:**
+- [x] **More Detailed High Score List:** Implemented a Top 5 leaderboard.
 
-*   **Main Menu:** Instead of starting right away, we could present a main menu screen with options like "Marathon," "40-Line Sprint," "Settings," and "View High Scores."
-*   **Settings Page:** Allow players to customize their experience. This could include:
-    *   **Volume Controls:** Separate sliders for music and sound effects.
-    *   **Customizable Controls:** Let players remap the keys for movement and actions.
-    *   **Ghost Piece Toggle:** An option to turn the ghost piece on or off.
-*   **More Detailed High Score List:** Instead of just one high score, we could store the top 5 or 10 scores with the date they were achieved.
+---
 
+### How to Add Sound Effects
 
+The game's sound engine is fully implemented. To enable sounds, you need to add your own `.wav` or `.mp3` files to the correct folder.
 
+**Due to the build process (Vite), all public assets like sounds MUST be placed in a `public` folder.**
 
+1.  **Create a `public` folder:** In the root directory of your project (the same level as `index.html`), create a new folder named `public`.
+2.  **Create a `sounds` folder:** Inside the new `public` folder, create a folder named `sounds`.
+3.  **Add your audio files:** Place your sound files inside this new `public/sounds/` folder. The game code will automatically look for files with these **exact names**:
+    *   `move.wav` (for moving left/right)
+    *   `rotate.wav` (for rotating a piece)
+    *   `softDrop.wav` (for pressing down arrow)
+    *   `hardDrop.wav` (for pressing spacebar)
+    *   `lock.wav` (when a piece solidifies)
+    *   `hold.wav` (for using the hold queue)
+    *   `clearLine.wav` (for clearing 1-3 lines)
+    *   `clearTetris.wav` (for clearing 4 lines)
+    *   `levelUp.wav` (when the level increases)
+    *   `pause.wav` (when the game is paused)
+    *   `gameOver.wav` (when the game ends)
 
-
-
-
+The game will now find and play your sounds automatically. No further code changes are needed.
