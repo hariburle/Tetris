@@ -109,8 +109,8 @@ const soundManager = {
         const soundFiles = ['move', 'rotate', 'softDrop', 'hardDrop', 'lock', 'hold', 'clearLine', 'clearTetris', 'levelUp', 'pause', 'gameOver'];
         
         // This is the key fix for the crash and for GitHub pages deployment
-        const baseUrl = (typeof import.meta.env !== 'undefined' && import.meta.env.BASE_URL) 
-                      ? import.meta.env.BASE_URL 
+        const baseUrl = (typeof (import.meta as any).env !== 'undefined' && (import.meta as any).env.BASE_URL) 
+                      ? (import.meta as any).env.BASE_URL 
                       : '/';
 
         soundFiles.forEach(name => {
@@ -383,6 +383,8 @@ function animate(time = 0) {
             pieceDrop();
         }
     }
+
+    if (gameOver) return; // Prevent final draw from overwriting game over screen
     
     updateUI();
     draw();
@@ -781,32 +783,40 @@ function togglePause() {
 
 function handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
-    
-    // This listener handles returning to menu after game over
-    if (gameOver && animationFrameId === 0) {
-        showMainMenu();
+
+    // If the game is over, any key press should return to the main menu.
+    // This state takes priority over all other controls.
+    if (gameOver) {
+        if (animationFrameId === 0) { // Ensures the game loop has fully stopped
+            showMainMenu();
+        }
         return;
     }
 
+    // Modal handling is the next priority.
     const isModalOpen = !!document.querySelector('.modal:not(.hidden)');
     if (isModalOpen) {
         if (key === 'escape') {
             event.preventDefault();
             closeModalAndResume();
         }
-        return;
+        return; // Absorb all other key presses when a modal is open.
     }
 
+    // In-game global controls that can be activated at any time.
     if (key === 'h') { event.preventDefault(); showHelp(); return; }
-    
-    if (!gameOver && (key === 'p' || key === 'escape')) {
+    if (key === 'p' || key === 'escape') {
         event.preventDefault();
         togglePause();
         return;
     }
+    
+    // If the game is paused or in a line-clearing animation, block piece movement.
+    if (isPaused || linesToClear.length > 0) {
+        return;
+    }
 
-    if (gameOver || isPaused || linesToClear.length > 0 || !animationFrameId) return;
-
+    // --- Active Gameplay Controls ---
     switch (key) {
         case 'arrowleft': event.preventDefault(); pieceMove(-1); break;
         case 'arrowright': event.preventDefault(); pieceMove(1); break;

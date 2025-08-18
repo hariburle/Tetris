@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tetris</title>
-    <link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="index.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -22,9 +22,15 @@
     <div id="main-menu">
         <h1>TETRIS</h1>
         <div id="menu-button-group">
-            <button id="menu-marathon-button">Classic</button>
-            <button id="menu-sprint-button">Sprint (40L)</button>
-            <button id="menu-ultra-button">Ultra (3 Min)</button>
+            <div class="tooltip-container" data-tooltip="Classic Tetris. Clear lines to level up and increase speed. No time limit.">
+                <button id="menu-marathon-button">Classic</button>
+            </div>
+            <div class="tooltip-container" data-tooltip="Clear 40 lines as fast as you can. The timer stops when you clear the 40th line.">
+                <button id="menu-sprint-button">Sprint (40L)</button>
+            </div>
+            <div class="tooltip-container" data-tooltip="Score as many points as possible in 3 minutes. Speed does not increase.">
+                <button id="menu-ultra-button">Ultra (3 Min)</button>
+            </div>
             <button id="menu-high-scores-button">High Scores</button>
             <button id="menu-settings-button">Settings</button>
         </div>
@@ -122,6 +128,6 @@
         </div>
     </div>
 
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
 </body>
 </html>
