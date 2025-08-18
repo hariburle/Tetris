@@ -101,25 +101,44 @@ let gameMode: GameMode;
 let sprintLinesToGo: number;
 let ultraTimer: number; // in milliseconds
 
-// --- SOUND FRAMEWORK ---
+// --- SOUND FRAMEWORK (DEFINITIVE FIX) ---
 const soundManager = {
     sounds: {} as { [key: string]: HTMLAudioElement },
     volume: 0.5,
     loadSounds: function() {
         const soundFiles = ['move', 'rotate', 'softDrop', 'hardDrop', 'lock', 'hold', 'clearLine', 'clearTetris', 'levelUp', 'pause', 'gameOver'];
+        
+        // This is the key fix for the crash and for GitHub pages deployment
+        const baseUrl = (typeof import.meta.env !== 'undefined' && import.meta.env.BASE_URL) 
+                      ? import.meta.env.BASE_URL 
+                      : '/';
+
         soundFiles.forEach(name => {
-            // Use absolute paths for Vite to correctly serve from the `public` directory
-            this.sounds[name] = new Audio(`/sounds/${name}.wav`);
+            const audio = new Audio();
+            
+            const wavSource = document.createElement('source');
+            wavSource.src = `${baseUrl}sounds/${name}.wav`;
+            wavSource.type = 'audio/wav';
+
+            const mp3Source = document.createElement('source');
+            mp3Source.src = `${baseUrl}sounds/${name}.mp3`;
+            mp3Source.type = 'audio/mpeg';
+
+            audio.appendChild(wavSource);
+            audio.appendChild(mp3Source);
+
+            this.sounds[name] = audio;
         });
     },
     play: function(soundName: string) {
         if (this.sounds[soundName]) {
-            this.sounds[soundName].volume = this.volume;
-            this.sounds[soundName].currentTime = 0; // Rewind to start
-            this.sounds[soundName].play().catch(e => console.error(`Error playing sound ${soundName}:`, e));
+            const soundToPlay = this.sounds[soundName].cloneNode(true) as HTMLAudioElement;
+            soundToPlay.volume = this.volume;
+            soundToPlay.play().catch(e => console.error(`Error playing sound ${soundName}:`, e.message));
         }
     }
 };
+
 
 // --- INITIALIZATION ---
 function init() {
