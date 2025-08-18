@@ -25,6 +25,7 @@ const modeValue = document.getElementById('mode-value')!;
 
 // Main Menu Elements
 const mainMenu = document.getElementById('main-menu')!;
+const menuButtons = document.querySelectorAll<HTMLButtonElement>('#menu-button-group button');
 const menuMarathonButton = document.getElementById('menu-marathon-button')!;
 const menuSprintButton = document.getElementById('menu-sprint-button')!;
 const menuUltraButton = document.getElementById('menu-ultra-button')!;
@@ -100,6 +101,7 @@ let settings: Settings;
 let gameMode: GameMode;
 let sprintLinesToGo: number;
 let ultraTimer: number; // in milliseconds
+let selectedMenuIndex: number = 0;
 
 // --- SOUND FRAMEWORK (DEFINITIVE FIX) ---
 const soundManager = {
@@ -190,6 +192,18 @@ function showMainMenu() {
     mainMenu.classList.remove('hidden');
     gameContainer.classList.add('hidden');
     modeDisplay.classList.add('hidden');
+    selectedMenuIndex = 0;
+    updateMenuSelection();
+}
+
+function updateMenuSelection() {
+    menuButtons.forEach((button, index) => {
+        if (index === selectedMenuIndex) {
+            button.classList.add('selected');
+        } else {
+            button.classList.remove('selected');
+        }
+    });
 }
 
 function showGame() {
@@ -783,9 +797,28 @@ function togglePause() {
 
 function handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
+    const isMainMenuVisible = !mainMenu.classList.contains('hidden');
 
-    // If the game is over, any key press should return to the main menu.
-    // This state takes priority over all other controls.
+    // State 1: Main Menu is active
+    if (isMainMenuVisible) {
+        event.preventDefault();
+        switch (key) {
+            case 'arrowdown':
+                selectedMenuIndex = (selectedMenuIndex + 1) % menuButtons.length;
+                updateMenuSelection();
+                break;
+            case 'arrowup':
+                selectedMenuIndex = (selectedMenuIndex - 1 + menuButtons.length) % menuButtons.length;
+                updateMenuSelection();
+                break;
+            case 'enter':
+                menuButtons[selectedMenuIndex].click();
+                break;
+        }
+        return;
+    }
+    
+    // State 2: Game Over screen is showing
     if (gameOver) {
         if (animationFrameId === 0) { // Ensures the game loop has fully stopped
             showMainMenu();
@@ -793,7 +826,7 @@ function handleKeyPress(event: KeyboardEvent) {
         return;
     }
 
-    // Modal handling is the next priority.
+    // State 3: A modal is open
     const isModalOpen = !!document.querySelector('.modal:not(.hidden)');
     if (isModalOpen) {
         if (key === 'escape') {
@@ -803,7 +836,7 @@ function handleKeyPress(event: KeyboardEvent) {
         return; // Absorb all other key presses when a modal is open.
     }
 
-    // In-game global controls that can be activated at any time.
+    // State 4: In-game global controls
     if (key === 'h') { event.preventDefault(); showHelp(); return; }
     if (key === 'p' || key === 'escape') {
         event.preventDefault();
@@ -816,12 +849,13 @@ function handleKeyPress(event: KeyboardEvent) {
         return;
     }
 
-    // --- Active Gameplay Controls ---
+    // State 5: Active Gameplay Controls
     switch (key) {
         case 'arrowleft': event.preventDefault(); pieceMove(-1); break;
         case 'arrowright': event.preventDefault(); pieceMove(1); break;
         case 'arrowdown': event.preventDefault(); pieceDrop(); soundManager.play('softDrop'); break;
         case 'arrowup': event.preventDefault(); pieceRotate(); break;
+        case 'enter':
         case ' ': 
             event.preventDefault();
             while (isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
