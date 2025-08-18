@@ -1,8 +1,6 @@
 // Game constants
 const COLS = 10;
 const ROWS = 20;
-const BLOCK_SIZE = 30;
-const NEXT_CANVAS_BLOCK_SIZE = 20;
 
 // Game elements from the DOM
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -12,6 +10,7 @@ const nextCtx = nextCanvas.getContext('2d')!;
 const scoreEl = document.getElementById('score')!;
 const linesEl = document.getElementById('lines')!;
 const levelEl = document.getElementById('level')!;
+const highScoreEl = document.getElementById('high-score')!;
 const startButton = document.getElementById('start-button')!;
 const helpButton = document.getElementById('help-button')!;
 const helpModal = document.getElementById('help-modal')!;
@@ -29,16 +28,29 @@ const SHAPES = [
     [[7, 7, 0], [0, 7, 7], [0, 0, 0]],                         // Z
 ];
 
-const COLORS = [
-    'transparent',
-    '#00bcd4', // I (cyan)
-    '#2196f3', // J (blue)
-    '#ff9800', // L (orange)
-    '#ffeb3b', // O (yellow)
-    '#4caf50', // S (green)
-    '#9c27b0', // T (purple)
-    '#f44336', // Z (red)
+const PALETTE = [
+    { base: 'transparent', light: 'transparent', dark: 'transparent' },
+    { base: '#00bcd4', light: '#6ff9ff', dark: '#008ba3' }, // I (cyan)
+    { base: '#2196f3', light: '#6ec6ff', dark: '#0069c0' }, // J (blue)
+    { base: '#ff9800', light: '#ffc947', dark: '#c66900' }, // L (orange)
+    { base: '#ffeb3b', light: '#ffff72', dark: '#c8b900' }, // O (yellow)
+    { base: '#4caf50', light: '#80e27e', dark: '#087f23' }, // S (green)
+    { base: '#9c27b0', light: '#d05ce3', dark: '#6a0080' }, // T (purple)
+    { base: '#f44336', light: '#ff7961', dark: '#ba000d' }, // Z (red)
 ];
+
+const GHOST_PALETTE = {
+    base: '#555',
+    light: '#888',
+    dark: '#333'
+};
+
+const GRAY_PALETTE = {
+    base: '#424242',
+    light: '#6d6d6d',
+    dark: '#1b1b1b'
+};
+
 
 // Define types for our game pieces
 type Piece = {
@@ -54,23 +66,18 @@ let nextPiece: { shape: number[][]; };
 let score: number;
 let lines: number;
 let level: number;
+let highScore: number;
 let gameOver: boolean;
 let isPaused: boolean;
 let dropCounter: number;
 let dropInterval: number;
 let lastTime: number;
 let animationFrameId: number;
+let blockSize: number;
+let nextBlockSize: number;
 
 function init() {
-    // Initialize canvas sizes
-    canvas.width = COLS * BLOCK_SIZE;
-    canvas.height = ROWS * BLOCK_SIZE;
-    nextCanvas.width = 4 * NEXT_CANVAS_BLOCK_SIZE;
-    nextCanvas.height = 4 * NEXT_CANVAS_BLOCK_SIZE;
-
-    // Scale contexts for crisp rendering
-    ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
-    nextCtx.scale(NEXT_CANVAS_BLOCK_SIZE, NEXT_CANVAS_BLOCK_SIZE);
+    loadHighScore();
 
     // Event Listeners
     startButton.addEventListener('click', () => {
@@ -89,6 +96,45 @@ function init() {
     document.addEventListener('keydown', handleKeyPress);
     helpButton.addEventListener('click', showHelp);
     closeHelpButton.addEventListener('click', hideHelp);
+    
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial sizing
+}
+
+function handleResize() {
+    // Calculate block size based on viewport height to ensure the board fits vertically
+    const vh = window.innerHeight;
+    // Use 90% of viewport height, leaving some margin
+    blockSize = Math.floor((vh * 0.9) / ROWS);
+
+    // Set main canvas size
+    canvas.width = COLS * blockSize;
+    canvas.height = ROWS * blockSize;
+    // IMPORTANT: Resizing canvas resets context, so we must rescale every time
+    ctx.scale(blockSize, blockSize);
+
+    // Set next piece canvas size to be proportional
+    nextBlockSize = Math.floor(blockSize * 0.7);
+    nextCanvas.width = 4 * nextBlockSize;
+    nextCanvas.height = 4 * nextBlockSize;
+    nextCtx.scale(nextBlockSize, nextBlockSize);
+    
+    // After resizing, we need to redraw the current state if the game is not actively running
+    // The animation loop will handle redraws for an active game.
+    if (nextPiece) {
+        drawNextPiece();
+    }
+    
+    if (gameOver) {
+        draw();
+        drawGameOver();
+    } else if (isPaused) {
+        draw();
+        drawPaused();
+    } else if (!animationFrameId && grid) {
+        // Game has finished but not started a new one yet.
+        draw();
+    }
 }
 
 function startGame() {
@@ -108,6 +154,7 @@ function startGame() {
     
     hideHelp(); // Ensure help is hidden on new game
     updateUI();
+    updateHighScoreUI();
     
     resetNextPiece();
     resetPiece();
@@ -126,7 +173,6 @@ function resetPiece() {
     
     if (!isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y)) {
         gameOver = true;
-        startButton.textContent = 'Start Game';
     }
 }
 
@@ -150,6 +196,7 @@ function animate(time = 0) {
     }
 
     if (gameOver) {
+        checkAndUpdateHighScore();
         drawGameOver();
         cancelAnimationFrame(animationFrameId);
         animationFrameId = 0; // Reset animationFrameId
@@ -173,16 +220,11 @@ function draw() {
     drawMatrix(ctx, grid, 0, 0);
 
     // Draw Ghost Piece
-    if (!gameOver) {
-        let ghostY = currentPiece.y;
-        while (isValidMove(currentPiece.shape, currentPiece.x, ghostY + 1)) {
-            ghostY++;
-        }
-        ctx.save();
-        ctx.globalAlpha = 0.3;
-        drawMatrix(ctx, currentPiece.shape, currentPiece.x, ghostY);
-        ctx.restore();
+    let ghostY = currentPiece.y;
+    while (isValidMove(currentPiece.shape, currentPiece.x, ghostY + 1)) {
+        ghostY++;
     }
+    drawGhostMatrix(ctx, currentPiece.shape, currentPiece.x, ghostY);
     
     drawMatrix(ctx, currentPiece.shape, currentPiece.x, currentPiece.y);
 }
@@ -196,25 +238,70 @@ function drawNextPiece() {
     drawMatrix(nextCtx, shape, offsetX, offsetY);
 }
 
-function drawMatrix(context: CanvasRenderingContext2D, matrix: number[][], offsetX: number, offsetY: number) {
+function drawMatrix(context: CanvasRenderingContext2D, matrix: number[][], offsetX: number, offsetY: number, forceColor?: { base: string, light: string, dark: string }) {
     matrix.forEach((row, y) => {
         row.forEach((value, x) => {
             if (value > 0) {
-                context.fillStyle = COLORS[value];
-                context.fillRect(x + offsetX, y + offsetY, 1, 1);
+                const color = forceColor ? forceColor : PALETTE[value];
+                const blockX = x + offsetX;
+                const blockY = y + offsetY;
+                const borderWidth = 0.1;
+
+                // Darker bottom/right side for shadow
+                context.fillStyle = color.dark;
+                context.fillRect(blockX, blockY, 1, 1);
+
+                // Lighter top/left side for highlight
+                context.fillStyle = color.light;
+                context.fillRect(blockX, blockY, 1 - borderWidth, 1 - borderWidth);
+
+                // Main color in the middle
+                context.fillStyle = color.base;
+                context.fillRect(blockX + borderWidth, blockY + borderWidth, 1 - (borderWidth * 2), 1 - (borderWidth * 2));
             }
         });
     });
 }
 
+function drawGhostMatrix(context: CanvasRenderingContext2D, matrix: number[][], offsetX: number, offsetY: number) {
+    matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if (value > 0) {
+                const blockX = x + offsetX;
+                const blockY = y + offsetY;
+                const borderWidth = 0.1;
+
+                // Darker bottom/right side for shadow
+                context.fillStyle = GHOST_PALETTE.dark;
+                context.fillRect(blockX, blockY, 1, 1);
+
+                // Lighter top/left side for highlight
+                context.fillStyle = GHOST_PALETTE.light;
+                context.fillRect(blockX, blockY, 1 - borderWidth, 1 - borderWidth);
+
+                // Main color in the middle
+                context.fillStyle = GHOST_PALETTE.base;
+                context.fillRect(blockX + borderWidth, blockY + borderWidth, 1 - (borderWidth * 2), 1 - (borderWidth * 2));
+            }
+        });
+    });
+}
+
+
 function drawGameOver() {
+    // Draw the final grid state in grayscale.
+    drawMatrix(ctx, grid, 0, 0, GRAY_PALETTE);
+
+    // Draw a semi-transparent overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     ctx.fillRect(0, 0, COLS, ROWS);
 
+    // Draw the text
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
 
-    ctx.font = '1.5px "Press Start 2P"';
+    // Adjusted font size to prevent truncation
+    ctx.font = '1.1px "Press Start 2P"';
     ctx.fillText('GAME OVER', COLS / 2, ROWS / 2 - 1.5);
 
     ctx.font = '0.7px "Press Start 2P"';
@@ -332,6 +419,28 @@ function updateUI() {
     scoreEl.textContent = score.toString();
     linesEl.textContent = lines.toString();
     levelEl.textContent = level.toString();
+}
+
+function loadHighScore() {
+    const savedHighScore = localStorage.getItem('tetrisHighScore');
+    highScore = savedHighScore ? parseInt(savedHighScore, 10) : 0;
+    updateHighScoreUI();
+}
+
+function saveHighScore() {
+    localStorage.setItem('tetrisHighScore', highScore.toString());
+}
+
+function checkAndUpdateHighScore() {
+    if (score > highScore) {
+        highScore = score;
+        saveHighScore();
+        updateHighScoreUI();
+    }
+}
+
+function updateHighScoreUI() {
+    highScoreEl.textContent = highScore.toString();
 }
 
 function togglePause() {

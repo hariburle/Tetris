@@ -7,6 +7,10 @@
     --font-family: 'Press Start 2P', cursive;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -14,20 +18,25 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    height: 100%;
     margin: 0;
-    padding: 1rem;
+    padding: 0;
     box-sizing: border-box;
     -webkit-font-smoothing: none; /* Keep pixel fonts sharp */
     font-smooth: never;
+    overflow: hidden; /* Prevent scrolling */
 }
 
 #game-container {
     display: flex;
     gap: 2rem;
-    align-items: flex-start;
+    align-items: center;
     flex-wrap: wrap;
     justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 canvas {
@@ -70,8 +79,6 @@ canvas {
 }
 
 #next-canvas {
-    width: 120px;
-    height: 120px;
     align-self: center;
     background: var(--grid-bg-color);
 }
