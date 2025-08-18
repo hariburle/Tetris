@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "vite": "https://esm.sh/vite@^7.1.2"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/Tetris/assets/index-BrxpdDtU.js"></script>
+  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-D49IILwE.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="side-panel">
+            <h1>TETRIS</h1>
+            <div>
+                <h2>SCORE</h2>
+                <p id="score">0</p>
+            </div>
+            <div>
+                <h2>LINES</h2>
+                <p id="lines">0</p>
+            </div>
+            <div>
+                <h2>LEVEL</h2>
+                <p id="level">0</p>
+            </div>
+            <div>
+                <h2>HIGH SCORE</h2>
+                <p id="high-score">0</p>
+            </div>
+            <div>
+                <h2>NEXT</h2>
+                <canvas id="next-canvas"></canvas>
+            </div>
+            <button id="start-button">Start Game</button>
+            <button id="help-button">Help</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>How to Play</h2>
+            <div class="controls-list">
+                <p><strong>Arrow Left:</strong> Move Left</p>
+                <p><strong>Arrow Right:</strong> Move Right</p>
+                <p><strong>Arrow Down:</strong> Soft Drop</p>
+                <p><strong>Arrow Up:</strong> Rotate</p>
+                <p><strong>Spacebar:</strong> Hard Drop</p>
+                <p><strong>P / Esc:</strong> Pause Game</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
