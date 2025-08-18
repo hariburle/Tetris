@@ -105,10 +105,25 @@ function init() {
 }
 
 function handleResize() {
-    // Calculate block size based on viewport height to ensure the board fits vertically
     const vh = window.innerHeight;
-    // Use 90% of viewport height, leaving some margin
-    blockSize = Math.floor((vh * 0.9) / ROWS);
+    const vw = document.body.clientWidth; // Use clientWidth to avoid scrollbar issues
+
+    // Determine max possible size of game area
+    const gameArea = document.getElementById('game-container')!;
+    const sidePanel = document.getElementById('side-panel')!;
+
+    let availableWidth = gameArea.clientWidth;
+    // On desktop, subtract side panel width
+    if (window.innerWidth > 768) {
+         availableWidth -= (sidePanel.clientWidth + 32); // 32 is for the gap
+    }
+    
+    const blockFromHeight = Math.floor((vh * 0.9) / ROWS);
+    // On mobile, the canvas can take almost full width
+    const blockFromWidth = Math.floor((availableWidth * 0.95) / COLS); 
+
+    // Use the smaller of the two to ensure the board fits in both dimensions
+    blockSize = Math.min(blockFromHeight, blockFromWidth);
 
     // Set main canvas size
     canvas.width = COLS * blockSize;
@@ -135,7 +150,7 @@ function handleResize() {
         draw();
         drawPaused();
     } else if (!animationFrameId && grid) {
-        // Game has finished but not started a new one yet.
+        // Game has not started a new one yet.
         draw();
     }
 }
