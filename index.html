@@ -15,36 +15,40 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/Tetris/assets/index-DerUfMkc.js"></script>
-  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-D49IILwE.css">
+  <script type="module" crossorigin src="/Tetris/assets/index-C_SIF7b5.js"></script>
+  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-LkAdklSR.css">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
         <div id="side-panel">
             <h1>TETRIS</h1>
-            <div>
-                <h2>SCORE</h2>
-                <p id="score">0</p>
-            </div>
-            <div>
-                <h2>LINES</h2>
-                <p id="lines">0</p>
-            </div>
-            <div>
-                <h2>LEVEL</h2>
-                <p id="level">0</p>
-            </div>
-            <div>
-                <h2>HIGH SCORE</h2>
-                <p id="high-score">0</p>
+            <div id="stats-grid">
+                <div>
+                    <h2>SCORE</h2>
+                    <p id="score">0</p>
+                </div>
+                <div>
+                    <h2>LINES</h2>
+                    <p id="lines">0</p>
+                </div>
+                <div>
+                    <h2>LEVEL</h2>
+                    <p id="level">0</p>
+                </div>
+                <div>
+                    <h2>Hi Score</h2>
+                    <p id="high-score">0</p>
+                </div>
             </div>
             <div>
                 <h2>NEXT</h2>
                 <canvas id="next-canvas"></canvas>
             </div>
-            <button id="start-button">Start Game</button>
-            <button id="help-button">Help</button>
+            <div id="button-group">
+                <button id="start-button">Start Game</button>
+                <button id="help-button">Help</button>
+            </div>
         </div>
     </div>
 
