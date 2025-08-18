@@ -102,6 +102,7 @@ function init() {
     
     window.addEventListener('resize', handleResize);
     handleResize(); // Initial sizing
+    resetNextPiece(); // Show the first piece on load
 }
 
 function handleResize() {
@@ -128,6 +129,15 @@ function handleResize() {
     // Set main canvas size
     canvas.width = COLS * blockSize;
     canvas.height = ROWS * blockSize;
+    
+    // Set side-panel height to match canvas on desktop for vertical alignment
+    if (window.innerWidth > 768) {
+        sidePanel.style.height = `${canvas.height}px`;
+    } else {
+        // On mobile, reset to auto height
+        sidePanel.style.height = 'auto';
+    }
+
     // IMPORTANT: Resizing canvas resets context, so we must rescale every time
     ctx.scale(blockSize, blockSize);
 

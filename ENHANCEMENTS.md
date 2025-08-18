@@ -34,3 +34,11 @@ These features make the game more user-friendly and complete.
     *   **Customizable Controls:** Let players remap the keys for movement and actions.
     *   **Ghost Piece Toggle:** An option to turn the ghost piece on or off.
 *   **More Detailed High Score List:** Instead of just one high score, we could store the top 5 or 10 scores with the date they were achieved.
+
+
+
+
+
+
+
+

@@ -51,17 +51,31 @@ canvas {
 #side-panel {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    min-width: 180px;
+    /* Vertically distribute content to match canvas height */
+    justify-content: space-between;
+    min-width: 220px;
     text-align: center;
 }
 
 #side-panel h1 {
     font-size: 2rem;
     color: var(--accent-color);
-    margin: 0 0 1rem 0;
+    /* Removed bottom margin as space-between handles it */
+    margin: 0;
     text-shadow: 0 0 10px var(--accent-color);
 }
+
+#stats-grid {
+    display: flex;
+    flex-direction: column;
+    /* Use space-evenly for equal distribution including top/bottom space */
+    justify-content: space-evenly;
+    /* Allows this container to grow and fill the space given by the parent */
+    flex-grow: 1;
+    /* Padding is no longer needed as space-evenly handles the top/bottom spacing */
+    padding: 0;
+}
+
 
 #side-panel h2 {
     font-size: 1rem;
@@ -199,6 +213,7 @@ canvas {
         flex-direction: column;
         align-items: center;
         width: 100%;
+        /* Mobile-specific gap */
         gap: 1.5rem;
         min-width: unset;
     }
@@ -206,7 +221,8 @@ canvas {
     #side-panel h1 {
         width: 100%;
         text-align: center;
-        margin-bottom: 0;
+        /* Mobile-specific margin */
+        margin: 0;
         font-size: 1.5rem;
     }
 
@@ -216,6 +232,8 @@ canvas {
         gap: 1rem;
         width: 100%;
         max-width: 350px;
+        /* Reset the desktop padding for the mobile grid layout */
+        padding: 0;
     }
 
     #stats-grid h2 {
