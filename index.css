@@ -51,16 +51,17 @@ canvas {
 #side-panel {
     display: flex;
     flex-direction: column;
-    /* Vertically distribute content to match canvas height */
     justify-content: space-between;
     min-width: 220px;
     text-align: center;
+    /* THIS is the definitive fix: Add explicit padding to the top and bottom */
+    padding: 1rem 0;
+    box-sizing: border-box; /* Ensures padding is included in the height calculation */
 }
 
 #side-panel h1 {
     font-size: 2rem;
     color: var(--accent-color);
-    /* Removed bottom margin as space-between handles it */
     margin: 0;
     text-shadow: 0 0 10px var(--accent-color);
 }
@@ -68,11 +69,8 @@ canvas {
 #stats-grid {
     display: flex;
     flex-direction: column;
-    /* Use space-evenly for equal distribution including top/bottom space */
     justify-content: space-evenly;
-    /* Allows this container to grow and fill the space given by the parent */
     flex-grow: 1;
-    /* Padding is no longer needed as space-evenly handles the top/bottom spacing */
     padding: 0;
 }
 
@@ -103,7 +101,7 @@ canvas {
     gap: 1rem;
 }
 
-#start-button, #help-button {
+#start-button, #help-button, #quit-button {
     font-family: var(--font-family);
     font-size: 1rem;
     padding: 1rem;
@@ -118,12 +116,24 @@ canvas {
 }
 
 #start-button:hover, #start-button:focus,
-#help-button:hover, #help-button:focus {
+#help-button:hover, #help-button:focus,
+#quit-button:hover, #quit-button:focus {
     background-color: #fff;
     color: #000;
     box-shadow: 0 0 20px #fff;
     transform: scale(1.05);
 }
+
+#quit-button {
+    background-color: #b71c1c; /* Darker, less saturated red */
+    box-shadow: 0 0 10px #b71c1c;
+}
+
+#quit-button:hover, #quit-button:focus {
+    background-color: #f05545; /* A slightly brighter but still muted red for hover */
+    box-shadow: 0 0 20px #f05545;
+}
+
 
 #help-button {
     font-size: 0.9rem;
@@ -213,15 +223,15 @@ canvas {
         flex-direction: column;
         align-items: center;
         width: 100%;
-        /* Mobile-specific gap */
         gap: 1.5rem;
         min-width: unset;
+        /* Reset the desktop padding for mobile */
+        padding: 0;
     }
     
     #side-panel h1 {
         width: 100%;
         text-align: center;
-        /* Mobile-specific margin */
         margin: 0;
         font-size: 1.5rem;
     }
@@ -232,7 +242,6 @@ canvas {
         gap: 1rem;
         width: 100%;
         max-width: 350px;
-        /* Reset the desktop padding for the mobile grid layout */
         padding: 0;
     }
 

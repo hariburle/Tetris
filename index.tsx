@@ -12,6 +12,7 @@ const linesEl = document.getElementById('lines')!;
 const levelEl = document.getElementById('level')!;
 const highScoreEl = document.getElementById('high-score')!;
 const startButton = document.getElementById('start-button')!;
+const quitButton = document.getElementById('quit-button')!;
 const helpButton = document.getElementById('help-button')!;
 const helpModal = document.getElementById('help-modal')!;
 const closeHelpButton = document.querySelector('.close-button')!;
@@ -96,6 +97,7 @@ function init() {
             startGame();
         }
     });
+    quitButton.addEventListener('click', quitGame);
     document.addEventListener('keydown', handleKeyPress);
     helpButton.addEventListener('click', showHelp);
     closeHelpButton.addEventListener('click', hideHelp);
@@ -189,8 +191,35 @@ function startGame() {
     resetPiece();
     
     startButton.textContent = 'Pause';
+    quitButton.classList.remove('hidden');
     animate(0);
 }
+
+function quitGame() {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = 0;
+    }
+    
+    // Reset game state to pre-game state
+    grid = createEmptyGrid();
+    score = 0;
+    lines = 0;
+    level = 0;
+    gameOver = false;
+    isPaused = false;
+    dropInterval = 1000;
+    updateAccentColor(0);
+    
+    // Reset UI
+    updateUI();
+    resetNextPiece();
+    draw(); // Redraw empty board
+    
+    startButton.textContent = 'Start Game';
+    quitButton.classList.add('hidden');
+}
+
 
 function createEmptyGrid(): number[][] {
     return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -230,6 +259,7 @@ function animate(time = 0) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = 0; // Reset animationFrameId
         startButton.textContent = 'Start Game';
+        quitButton.classList.add('hidden');
         return;
     }
 
@@ -515,6 +545,13 @@ function hideHelp() {
 
 
 function handleKeyPress(event: KeyboardEvent) {
+    // These keys can be pressed at any time.
+    if (event.key === 'h' || event.key === 'H') {
+        event.preventDefault();
+        showHelp();
+        return;
+    }
+    
     // Allow pausing/unpausing anytime, unless game is over
     if (!gameOver && (event.key === 'p' || event.key === 'P' || event.key === 'Escape')) {
         event.preventDefault();
@@ -553,6 +590,11 @@ function handleKeyPress(event: KeyboardEvent) {
                 currentPiece.y++;
             }
             solidifyPiece();
+            break;
+        case 'q':
+        case 'Q':
+            event.preventDefault();
+            quitGame();
             break;
     }
     draw();
