@@ -39,6 +39,9 @@ const PALETTE = [
     { base: '#f44336', light: '#ff7961', dark: '#ba000d' }, // Z (red)
 ];
 
+const ACCENT_COLORS = ['#00bcd4', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#2196f3'];
+
+
 const GHOST_PALETTE = {
     base: '#555',
     light: '#888',
@@ -152,6 +155,7 @@ function startGame() {
     lastTime = 0;
     animationFrameId = 0;
     
+    updateAccentColor(level); // Reset accent color
     hideHelp(); // Ensure help is hidden on new game
     updateUI();
     updateHighScoreUI();
@@ -404,15 +408,26 @@ function clearLines() {
     }
 
     if (linesCleared > 0) {
+        const previousLevel = level;
         lines += linesCleared;
         const linePoints = [0, 100, 300, 500, 800];
         score += linePoints[linesCleared] * (level + 1);
         
         level = Math.floor(lines / 10);
+        
+        if (level > previousLevel) {
+            updateAccentColor(level);
+        }
+        
         dropInterval = Math.max(200, 1000 - level * 75);
         
         updateUI();
     }
+}
+
+function updateAccentColor(newLevel: number) {
+    const color = ACCENT_COLORS[newLevel % ACCENT_COLORS.length];
+    document.documentElement.style.setProperty('--accent-color', color);
 }
 
 function updateUI() {
