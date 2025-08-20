@@ -1,3 +1,4 @@
+
 // Game constants
 const COLS = 10;
 const ROWS = 20;
@@ -185,10 +186,13 @@ function setupEventListeners() {
     // Global listeners
     document.addEventListener('keydown', handleKeyPress);
     window.addEventListener('resize', handleResize);
+    setupMobileControls();
 }
 
 // --- UI & SCREEN MANAGEMENT ---
 function showMainMenu() {
+    canvas.removeEventListener('click', showMainMenu);
+    document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
     mainMenu.classList.remove('hidden');
     gameContainer.classList.add('hidden');
     modeDisplay.classList.add('hidden');
@@ -252,9 +256,7 @@ function closeModalAndResume() {
 
     if (wasPausedForModal && animationFrameId && !gameOver) {
         isPaused = false; // Manually unpause
-        pauseButton.textContent = 'Pause';
-        lastTime = performance.now();
-        animate(lastTime);
+        togglePause(); // Use togglePause to correctly update button text
     }
 }
 
@@ -413,6 +415,7 @@ function endGame() {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = 0;
     quitButton.classList.add('hidden');
+    canvas.addEventListener('click', showMainMenu);
 }
 
 
@@ -792,8 +795,68 @@ function togglePause() {
         animate(lastTime);
     }
     
-    pauseButton.textContent = isPaused ? 'Resume' : 'Pause';
+    const newText = isPaused ? 'Resume' : 'Pause';
+    pauseButton.textContent = newText;
+    const mcPause = document.getElementById('mc-pause');
+    if (mcPause) mcPause.textContent = newText;
 }
+
+function setupMobileControls() {
+    const mcLeft = document.getElementById('mc-left');
+    const mcRight = document.getElementById('mc-right');
+    const mcDown = document.getElementById('mc-down');
+    const mcRotate = document.getElementById('mc-rotate');
+    const mcHardDrop = document.getElementById('mc-hard-drop');
+    const mcHold = document.getElementById('mc-hold');
+    const mcPause = document.getElementById('mc-pause');
+    const mcHelp = document.getElementById('mc-help');
+
+    // Early exit if controls aren't in the DOM
+    if (!mcLeft || !mcRight || !mcDown || !mcRotate || !mcHardDrop || !mcHold || !mcPause || !mcHelp) {
+        return;
+    }
+
+    const handleControlPress = (action: Function, sound?: string) => {
+        // The event type is widened to accept both Touch and Mouse events.
+        const handler = (event: TouchEvent | MouseEvent) => {
+            event.preventDefault(); // Prevents default actions like scrolling or text selection
+            // Guard clause: only allow actions during active gameplay
+            if (isPaused || gameOver || linesToClear.length > 0 || !!document.querySelector('.modal:not(.hidden)')) {
+                // Allow help and pause to work even when paused
+                if (action !== togglePause && action !== showHelp) {
+                    return;
+                }
+            }
+            action();
+            if (sound) soundManager.play(sound);
+            if (!isPaused) draw();
+        };
+        return handler;
+    };
+
+    const hardDropAction = () => {
+        while (isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+            currentPiece.y++;
+        }
+        solidifyPiece();
+    };
+
+    // Helper to add both touch and mouse listeners
+    const addControlListeners = (element: HTMLElement, handler: (event: TouchEvent | MouseEvent) => void) => {
+        element.addEventListener('touchstart', handler, { passive: false });
+        element.addEventListener('mousedown', handler, { passive: false });
+    };
+
+    addControlListeners(mcLeft, handleControlPress(() => pieceMove(-1)));
+    addControlListeners(mcRight, handleControlPress(() => pieceMove(1)));
+    addControlListeners(mcDown, handleControlPress(pieceDrop, 'softDrop'));
+    addControlListeners(mcRotate, handleControlPress(pieceRotate));
+    addControlListeners(mcHold, handleControlPress(holdPiece));
+    addControlListeners(mcHardDrop, handleControlPress(hardDropAction, 'hardDrop'));
+    addControlListeners(mcPause, handleControlPress(togglePause));
+    addControlListeners(mcHelp, handleControlPress(showHelp));
+}
+
 
 function handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
