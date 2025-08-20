@@ -1,5 +1,4 @@
 
-
 // Game constants
 const COLS = 10;
 const ROWS = 20;
@@ -17,6 +16,8 @@ const scoreEl = document.getElementById('score')!;
 const linesEl = document.getElementById('lines')!;
 const levelEl = document.getElementById('level')!;
 const highScoreEl = document.getElementById('high-score')!;
+const mobileScoreEl = document.getElementById('mobile-score')!;
+const mobileLevelEl = document.getElementById('mobile-level')!;
 const pauseButton = document.getElementById('pause-button')!;
 const quitButton = document.getElementById('quit-button')!;
 const helpButton = document.getElementById('help-button')!;
@@ -24,6 +25,9 @@ const gameContainer = document.getElementById('game-container')!;
 const modeDisplay = document.getElementById('mode-display')!;
 const modeLabel = document.getElementById('mode-label')!;
 const modeValue = document.getElementById('mode-value')!;
+const mcPause = document.getElementById('mc-pause') as HTMLButtonElement;
+const mcHelp = document.getElementById('mc-help') as HTMLButtonElement;
+const mcQuit = document.getElementById('mc-quit') as HTMLButtonElement;
 
 // Main Menu Elements
 const mainMenu = document.getElementById('main-menu')!;
@@ -267,9 +271,10 @@ function handleResize() {
     const gameAreaRect = gameContainer.getBoundingClientRect();
     let availableWidth = gameAreaRect.width;
 
-    if (window.innerWidth <= 900) { // Broadened breakpoint for landscape tablets
+    if (window.innerWidth <= 768) { 
         // Mobile layout logic: calculate available height precisely
         const sidePanel = document.getElementById('side-panel')!;
+        const mobileHeader = document.getElementById('mobile-header')!;
         const containerStyle = window.getComputedStyle(gameContainer);
         const paddingTop = parseFloat(containerStyle.paddingTop);
         const paddingBottom = parseFloat(containerStyle.paddingBottom);
@@ -277,7 +282,7 @@ function handleResize() {
 
         // Calculate the total vertical space used by non-canvas elements
         const otherElementsHeight = (window.innerHeight > window.innerWidth) // is portrait?
-            ? (sidePanel.offsetHeight + paddingTop + paddingBottom + containerGap)
+            ? (mobileHeader.offsetHeight + sidePanel.offsetHeight + paddingTop + paddingBottom + containerGap)
             : (paddingTop + paddingBottom + containerGap);
         
         // The available height for the canvas is the viewport height minus everything else
@@ -300,7 +305,7 @@ function handleResize() {
     canvas.height = ROWS * blockSize;
     
     const sidePanel = document.getElementById('side-panel')!;
-    if (window.innerWidth > 900 || window.innerHeight < window.innerWidth) { // desktop or landscape
+    if (window.innerWidth > 768 || window.innerHeight < window.innerWidth) { // desktop or landscape
         sidePanel.style.height = `${canvas.height}px`;
     } else {
         sidePanel.style.height = 'auto';
@@ -369,7 +374,9 @@ function startGame(mode: GameMode) {
     resetPiece();
     drawHeldPiece();
     pauseButton.textContent = 'Pause';
+    mcPause.textContent = '❚❚';
     quitButton.classList.remove('hidden');
+    mcQuit.classList.remove('hidden');
     animate(0);
 }
 
@@ -379,6 +386,8 @@ function quitGame() {
         animationFrameId = 0;
     }
     gameOver = true;
+    quitButton.classList.add('hidden');
+    mcQuit.classList.add('hidden');
     showMainMenu();
 }
 
@@ -444,6 +453,7 @@ function endGame() {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = 0;
     quitButton.classList.add('hidden');
+    mcQuit.classList.add('hidden');
     canvas.addEventListener('click', showMainMenu);
 }
 
@@ -756,8 +766,10 @@ function updateAccentColor(newLevel: number) {
 
 function updateUI() {
     scoreEl.textContent = score.toString();
+    mobileScoreEl.textContent = score.toString();
     linesEl.textContent = lines.toString();
     levelEl.textContent = level.toString();
+    mobileLevelEl.textContent = level.toString();
     // Mode specific UI
     if (gameMode === 'sprint') {
         modeValue.textContent = Math.max(0, sprintLinesToGo).toString();
@@ -824,10 +836,8 @@ function togglePause() {
         animate(lastTime);
     }
     
-    const newText = isPaused ? 'Resume' : 'Pause';
-    pauseButton.textContent = newText;
-    const mcPause = document.getElementById('mc-pause');
-    if (mcPause) mcPause.textContent = newText;
+    pauseButton.textContent = isPaused ? 'Resume' : 'Pause';
+    mcPause.textContent = isPaused ? '▶' : '❚❚';
 }
 
 function setupMobileControls() {
@@ -837,11 +847,9 @@ function setupMobileControls() {
     const mcRotate = document.getElementById('mc-rotate');
     const mcHardDrop = document.getElementById('mc-hard-drop');
     const mcHold = document.getElementById('mc-hold');
-    const mcPause = document.getElementById('mc-pause');
-    const mcHelp = document.getElementById('mc-help');
 
     // Early exit if controls aren't in the DOM
-    if (!mcLeft || !mcRight || !mcDown || !mcRotate || !mcHardDrop || !mcHold || !mcPause || !mcHelp) {
+    if (!mcLeft || !mcRight || !mcDown || !mcRotate || !mcHardDrop || !mcHold || !mcPause || !mcHelp || !mcQuit) {
         return;
     }
 
@@ -891,6 +899,7 @@ function setupMobileControls() {
     addControlListeners(mcHardDrop, handleControlPress(hardDropAction, 'hardDrop'));
     addControlListeners(mcPause, handleControlPress(togglePause));
     addControlListeners(mcHelp, handleControlPress(showHelp));
+    addControlListeners(mcQuit, handleControlPress(quitGame));
 }
 
 
