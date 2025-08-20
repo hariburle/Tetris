@@ -16,8 +16,8 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/Tetris/assets/index-DkCQOfM3.js"></script>
-  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-BDOxiTRr.css">
+  <script type="module" crossorigin src="/Tetris/assets/index-BfEog89s.js"></script>
+  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-BsWTATl1.css">
 </head>
 <body>
     <!-- Main Menu -->
@@ -40,33 +40,51 @@
 
     <!-- Game Container (hidden by default) -->
     <div id="game-container" class="hidden">
-        <canvas id="game-canvas"></canvas>
-        <div id="side-panel">
+        <div id="mobile-header">
             <h1>TETRIS</h1>
-            <div id="stats-grid">
+            <div class="stats-numerical">
                  <div>
-                    <h2>NEXT</h2>
-                    <canvas id="next-canvas"></canvas>
-                </div>
-                <div>
                     <h2>SCORE</h2>
-                    <p id="score">0</p>
-                </div>
-                <div>
-                    <h2>LINES</h2>
-                    <p id="lines">0</p>
+                    <p id="mobile-score">0</p>
                 </div>
                 <div>
                     <h2>LEVEL</h2>
-                    <p id="level">0</p>
+                    <p id="mobile-level">0</p>
                 </div>
-                <div>
-                    <h2>Hi Score</h2>
-                    <p id="high-score">0</p>
+            </div>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+        <div id="side-panel">
+            <h1 class="desktop-only">TETRIS</h1>
+            <div id="stats-grid">
+                <div class="stats-numerical desktop-only">
+                    <div>
+                        <h2>SCORE</h2>
+                        <p id="score">0</p>
+                    </div>
+                    <div>
+                        <h2>LINES</h2>
+                        <p id="lines">0</p>
+                    </div>
+                    <div>
+                        <h2>LEVEL</h2>
+                        <p id="level">0</p>
+                    </div>
+                    <div>
+                        <h2>Hi Score</h2>
+                        <p id="high-score">0</p>
+                    </div>
                 </div>
-                <div>
-                    <h2>HOLD</h2>
-                    <canvas id="hold-canvas"></canvas>
+                <div class="stats-previews">
+                    <div>
+                        <h2>NEXT</h2>
+                        <canvas id="next-canvas"></canvas>
+                    </div>
+                    <div>
+                        <h2>HOLD</h2>
+                        <canvas id="hold-canvas"></canvas>
+                    </div>
                 </div>
             </div>
              <div id="mode-display" class="hidden">
@@ -139,8 +157,9 @@
             <button id="mc-right" class="mobile-btn">▶</button>
         </div>
         <div id="utility-buttons">
-            <button id="mc-pause" class="mobile-btn action">PAUSE</button>
-            <button id="mc-help" class="mobile-btn action">HELP</button>
+            <button id="mc-pause" class="mobile-btn utility">❚❚</button>
+            <button id="mc-help" class="mobile-btn utility">?</button>
+            <button id="mc-quit" class="mobile-btn utility hidden">X</button>
         </div>
         <div id="action-buttons">
             <button id="mc-hard-drop" class="mobile-btn action">DROP</button>
