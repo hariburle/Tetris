@@ -1,4 +1,5 @@
 
+
 // Game constants
 const COLS = 10;
 const ROWS = 20;
@@ -266,7 +267,7 @@ function handleResize() {
     const gameAreaRect = gameContainer.getBoundingClientRect();
     let availableWidth = gameAreaRect.width;
 
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 900) { // Broadened breakpoint for landscape tablets
         // Mobile layout logic: calculate available height precisely
         const sidePanel = document.getElementById('side-panel')!;
         const containerStyle = window.getComputedStyle(gameContainer);
@@ -275,7 +276,9 @@ function handleResize() {
         const containerGap = parseFloat(containerStyle.gap);
 
         // Calculate the total vertical space used by non-canvas elements
-        const otherElementsHeight = sidePanel.offsetHeight + paddingTop + paddingBottom + containerGap;
+        const otherElementsHeight = (window.innerHeight > window.innerWidth) // is portrait?
+            ? (sidePanel.offsetHeight + paddingTop + paddingBottom + containerGap)
+            : (paddingTop + paddingBottom + containerGap);
         
         // The available height for the canvas is the viewport height minus everything else
         const availableCanvasHeight = vh - otherElementsHeight;
@@ -297,7 +300,7 @@ function handleResize() {
     canvas.height = ROWS * blockSize;
     
     const sidePanel = document.getElementById('side-panel')!;
-    if (window.innerWidth > 768) {
+    if (window.innerWidth > 900 || window.innerHeight < window.innerWidth) { // desktop or landscape
         sidePanel.style.height = `${canvas.height}px`;
     } else {
         sidePanel.style.height = 'auto';
@@ -842,10 +845,17 @@ function setupMobileControls() {
         return;
     }
 
+    const vibrate = (duration: number = 25) => {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(duration);
+        }
+    }
+
     const handleControlPress = (action: Function, sound?: string) => {
         // The event type is widened to accept both Touch and Mouse events.
         const handler = (event: TouchEvent | MouseEvent) => {
             event.preventDefault(); // Prevents default actions like scrolling or text selection
+            vibrate(); // Haptic feedback on every press
             // Guard clause: only allow actions during active gameplay
             if (isPaused || gameOver || linesToClear.length > 0 || !!document.querySelector('.modal:not(.hidden)')) {
                 // Allow help and pause to work even when paused

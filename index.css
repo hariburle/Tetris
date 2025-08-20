@@ -450,7 +450,7 @@ input:checked + .slider:before {
     align-items: center;
     width: 48px;
     height: 48px;
-    transition: background-color 0.1s ease;
+    transition: background-color 0.1s ease, transform 0.05s ease-out;
 }
 
 .mobile-btn.action {
@@ -463,6 +463,7 @@ input:checked + .slider:before {
 
 .mobile-btn:active {
     background-color: var(--accent-color);
+    transform: scale(0.95); /* Juicy button press effect */
 }
 
 
@@ -540,5 +541,36 @@ input:checked + .slider:before {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
+    }
+}
+
+/* Landscape Mobile Layout */
+@media (max-width: 900px) and (orientation: landscape) {
+     #game-container {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+        padding-bottom: 100px; /* Space for controls */
+    }
+
+    #side-panel {
+        flex-direction: column;
+        justify-content: space-between;
+        width: 180px;
+        height: auto;
+    }
+
+    #stats-grid {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    #mobile-controls {
+        padding: 0.5rem 1rem;
     }
 }

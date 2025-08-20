@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "preview:mobile": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
