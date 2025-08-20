@@ -265,21 +265,46 @@ function handleResize() {
     const vh = window.innerHeight;
     const gameAreaRect = gameContainer.getBoundingClientRect();
     let availableWidth = gameAreaRect.width;
-    if (window.innerWidth > 768) {
-         availableWidth -= (220 + 32);
+
+    if (window.innerWidth <= 768) {
+        // Mobile layout logic: calculate available height precisely
+        const sidePanel = document.getElementById('side-panel')!;
+        const containerStyle = window.getComputedStyle(gameContainer);
+        const paddingTop = parseFloat(containerStyle.paddingTop);
+        const paddingBottom = parseFloat(containerStyle.paddingBottom);
+        const containerGap = parseFloat(containerStyle.gap);
+
+        // Calculate the total vertical space used by non-canvas elements
+        const otherElementsHeight = sidePanel.offsetHeight + paddingTop + paddingBottom + containerGap;
+        
+        // The available height for the canvas is the viewport height minus everything else
+        const availableCanvasHeight = vh - otherElementsHeight;
+        
+        const blockFromHeight = Math.floor(availableCanvasHeight / ROWS);
+        const blockFromWidth = Math.floor((gameAreaRect.width * 0.95) / COLS);
+
+        blockSize = Math.max(1, Math.min(blockFromHeight, blockFromWidth));
+
+    } else {
+        // Desktop layout logic
+         availableWidth -= (220 + 32); // side panel width + gap
+        const blockFromHeight = Math.floor((vh * 0.9) / ROWS);
+        const blockFromWidth = Math.floor((availableWidth * 0.95) / COLS);
+        blockSize = Math.max(1, Math.min(blockFromHeight, blockFromWidth));
     }
-    const blockFromHeight = Math.floor((vh * 0.9) / ROWS);
-    const blockFromWidth = Math.floor((availableWidth * 0.95) / COLS);
-    blockSize = Math.max(1, Math.min(blockFromHeight, blockFromWidth));
+
     canvas.width = COLS * blockSize;
     canvas.height = ROWS * blockSize;
+    
     const sidePanel = document.getElementById('side-panel')!;
     if (window.innerWidth > 768) {
         sidePanel.style.height = `${canvas.height}px`;
     } else {
         sidePanel.style.height = 'auto';
     }
+    
     ctx.scale(blockSize, blockSize);
+    
     sideBlockSize = Math.floor(blockSize * 0.7);
     nextCanvas.width = 4 * sideBlockSize;
     nextCanvas.height = 4 * sideBlockSize;
@@ -287,6 +312,7 @@ function handleResize() {
     holdCanvas.width = 4 * sideBlockSize;
     holdCanvas.height = 4 * sideBlockSize;
     holdCtx.scale(sideBlockSize, sideBlockSize);
+    
     if (nextPiece) drawNextPiece();
     if (heldPiece) drawHeldPiece();
     if (grid) { // Only draw if grid exists

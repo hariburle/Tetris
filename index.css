@@ -469,6 +469,7 @@ input:checked + .slider:before {
 @media (max-width: 768px) {
     body {
         overflow-y: auto;
+        align-items: flex-start; /* Aligns content to the top */
     }
     
     #main-menu h1 {
@@ -481,7 +482,7 @@ input:checked + .slider:before {
         gap: 2rem;
         height: auto;
         padding: 1rem 0.5rem;
-        padding-bottom: 2rem; /* Make space for controls */
+        padding-bottom: 140px; /* Increased padding to avoid overlap with mobile controls */
     }
     
     #game-canvas {
