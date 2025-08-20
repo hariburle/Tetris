@@ -419,6 +419,10 @@ input:checked + .slider:before {
     -webkit-tap-highlight-color: transparent; /* Remove blue flash on tap */
 }
 
+#mobile-utility-buttons {
+    display: none;
+}
+
 #d-pad {
     display: grid;
     grid-template-areas:
@@ -439,14 +443,6 @@ input:checked + .slider:before {
     flex-direction: column;
     gap: 0.8rem;
     justify-content: space-around;
-}
-
-#utility-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    justify-content: space-around;
-    align-items: center;
 }
 
 .mobile-btn {
@@ -563,19 +559,22 @@ input:checked + .slider:before {
         font-size: 1rem;
     }
     
-    .desktop-button-group {
+    #button-group {
         display: none;
+    }
+
+    #mobile-utility-buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 1rem;
     }
 
     #mobile-controls {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-    }
-    
-    #utility-buttons {
-        flex-direction: row;
-        gap: 1rem;
     }
 }
 
@@ -613,7 +612,6 @@ input:checked + .slider:before {
     .stats-numerical > div {
         display: block !important; /* Show all stats in landscape */
     }
-
 
     #mobile-controls {
         padding: 0.5rem 1rem;
