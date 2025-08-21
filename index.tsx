@@ -47,7 +47,7 @@ const highScoresModal = document.getElementById('high-scores-modal')!;
 const settingsModal = document.getElementById('settings-modal')!;
 const highScoresTable = document.getElementById('high-scores-table')!;
 const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
-const ghostToggle = document.getElementById('ghost-toggle') as HTMLInputElement;
+const ghostStyleSelect = document.getElementById('ghost-style-select') as HTMLSelectElement;
 
 // --- TETROMINOES & PALETTES ---
 const SHAPES = [
@@ -78,7 +78,8 @@ const GRAY_PALETTE = { base: '#424242', light: '#6d6d6d', dark: '#1b1b1b' };
 
 // --- TYPE DEFINITIONS ---
 type Piece = { x: number; y: number; shape: number[][]; shapeIndex: number; };
-type Settings = { volume: number; showGhost: boolean; };
+type GhostStyle = 'off' | 'solid' | 'outline';
+type Settings = { volume: number; ghostStyle: GhostStyle; };
 type HighScore = { score: number; date: string; };
 type GameMode = 'marathon' | 'sprint' | 'ultra';
 
@@ -117,7 +118,9 @@ const soundManager = {
     sounds: {} as { [key: string]: HTMLAudioElement },
     volume: 0.5,
     loadSounds: function() {
-        const soundFiles = ['move', 'rotate', 'softDrop', 'hardDrop', 'lock', 'hold', 'clearLine', 'clearTetris', 'levelUp', 'pause', 'gameOver'];
+        console.log("Attempting to load sound files...");
+        // Only attempt to load sound files that are known to exist.
+        const soundFiles = ['clearLine', 'clearTetris', 'gameOver', 'hardDrop', 'levelUp', 'lock'];
         
         // This is the key fix for the crash and for GitHub pages deployment
         const baseUrl = (typeof (import.meta as any).env !== 'undefined' && (import.meta as any).env.BASE_URL) 
@@ -125,6 +128,7 @@ const soundManager = {
                       : '/';
 
         soundFiles.forEach(name => {
+            console.log(`- Loading sound: ${name}`);
             const audio = new Audio();
             
             const wavSource = document.createElement('source');
@@ -140,8 +144,10 @@ const soundManager = {
 
             this.sounds[name] = audio;
         });
+        console.log("Sound loading finished.");
     },
     play: function(soundName: string) {
+        // If the sound wasn't loaded (because the file doesn't exist), this check prevents errors.
         if (this.sounds[soundName]) {
             const soundToPlay = this.sounds[soundName].cloneNode(true) as HTMLAudioElement;
             soundToPlay.volume = this.volume;
@@ -185,8 +191,8 @@ function setupEventListeners() {
         soundManager.volume = settings.volume;
         saveSettings();
     });
-    ghostToggle.addEventListener('change', (e) => {
-        settings.showGhost = (e.target as HTMLInputElement).checked;
+    ghostStyleSelect.addEventListener('change', (e) => {
+        settings.ghostStyle = (e.target as HTMLSelectElement).value as GhostStyle;
         saveSettings();
         if (!gameOver) draw(); // Redraw to show/hide ghost immediately
     });
@@ -413,7 +419,10 @@ function animate(time = 0) {
         return;
     }
     
-    const deltaTime = time - lastTime;
+    // On the first frame after starting, `lastTime` is 0 and `time` is a large timestamp.
+    // This creates a huge deltaTime, ending the game immediately in time-based modes.
+    // This fix resets the delta for the first frame to 0, effectively just syncing the timer.
+    const deltaTime = (lastTime === 0) ? 0 : time - lastTime;
     lastTime = time;
 
     // Handle game mode timers
@@ -624,10 +633,10 @@ function draw() {
     }
 
     if (!gameOver && currentPiece) {
-        if (settings.showGhost) {
+        if (settings.ghostStyle !== 'off') {
             let ghostY = currentPiece.y;
             while (isValidMove(currentPiece.shape, currentPiece.x, ghostY + 1)) ghostY++;
-            drawGhostMatrix(ctx, currentPiece.shape, currentPiece.x, ghostY);
+            drawGhostMatrix(ctx, currentPiece.shape, currentPiece.x, ghostY, settings.ghostStyle);
         }
         drawMatrix(ctx, currentPiece.shape, currentPiece.x, currentPiece.y);
     }
@@ -680,22 +689,38 @@ function drawMatrix(context: CanvasRenderingContext2D, matrix: number[][], offse
     });
 }
 
-function drawGhostMatrix(context: CanvasRenderingContext2D, matrix: number[][], offsetX: number, offsetY: number) {
-    const color = GHOST_PALETTE;
-    matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if (value > 0) {
-                const blockX = x + offsetX, blockY = y + offsetY, borderWidth = 0.1;
-                context.fillStyle = color.dark;
-                context.fillRect(blockX, blockY, 1, 1);
-                context.fillStyle = color.light;
-                context.fillRect(blockX, blockY, 1 - borderWidth, 1 - borderWidth);
-                context.fillStyle = color.base;
-                context.fillRect(blockX + borderWidth, blockY + borderWidth, 1 - (borderWidth * 2), 1 - (borderWidth * 2));
-            }
+function drawGhostMatrix(context: CanvasRenderingContext2D, matrix: number[][], offsetX: number, offsetY: number, style: GhostStyle) {
+    if (style === 'solid') {
+        const color = GHOST_PALETTE;
+        matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value > 0) {
+                    const blockX = x + offsetX, blockY = y + offsetY, borderWidth = 0.1;
+                    context.fillStyle = color.dark;
+                    context.fillRect(blockX, blockY, 1, 1);
+                    context.fillStyle = color.light;
+                    context.fillRect(blockX, blockY, 1 - borderWidth, 1 - borderWidth);
+                    context.fillStyle = color.base;
+                    context.fillRect(blockX + borderWidth, blockY + borderWidth, 1 - (borderWidth * 2), 1 - (borderWidth * 2));
+                }
+            });
         });
-    });
+    } else if (style === 'outline') {
+        context.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        context.lineWidth = 0.1;
+        matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value > 0) {
+                    const blockX = x + offsetX;
+                    const blockY = y + offsetY;
+                    const halfLineWidth = context.lineWidth / 2;
+                    context.strokeRect(blockX + halfLineWidth, blockY + halfLineWidth, 1 - context.lineWidth, 1 - context.lineWidth);
+                }
+            });
+        });
+    }
 }
+
 
 function drawGameOver() {
     drawMatrix(ctx, grid, 0, 0, GRAY_PALETTE);
@@ -798,15 +823,29 @@ function updateUI() {
 
 // --- DATA PERSISTENCE ---
 function loadSettings() {
-    const saved = localStorage.getItem('tetrisSettings');
-    settings = saved ? JSON.parse(saved) : { volume: 0.5, showGhost: true };
-    // Ensure new settings have defaults
-    if (settings.showGhost === undefined) settings.showGhost = true;
+    const savedString = localStorage.getItem('tetrisSettings');
+    const saved = savedString ? JSON.parse(savedString) : null;
+    
+    // Default settings
+    const defaultSettings: Settings = { volume: 0.5, ghostStyle: 'solid' };
+
+    if (saved) {
+        // Handle migration from old 'showGhost' boolean
+        if (typeof (saved as any).showGhost !== 'undefined') {
+            saved.ghostStyle = (saved as any).showGhost ? 'solid' : 'off';
+            delete (saved as any).showGhost; // clean up old property
+        }
+        // Merge saved settings with defaults to ensure all properties exist
+        settings = { ...defaultSettings, ...saved };
+    } else {
+        settings = defaultSettings;
+    }
 
     soundManager.volume = settings.volume;
     volumeSlider.value = settings.volume.toString();
-    ghostToggle.checked = settings.showGhost;
+    ghostStyleSelect.value = settings.ghostStyle;
 }
+
 
 function saveSettings() {
     localStorage.setItem('tetrisSettings', JSON.stringify(settings));
