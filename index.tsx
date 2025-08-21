@@ -25,6 +25,9 @@ const gameContainer = document.getElementById('game-container')!;
 const modeDisplay = document.getElementById('mode-display')!;
 const modeLabel = document.getElementById('mode-label')!;
 const modeValue = document.getElementById('mode-value')!;
+const mobileModeDisplay = document.getElementById('mobile-mode-display')!;
+const mobileModeLabel = document.getElementById('mobile-mode-label')!;
+const mobileModeValue = document.getElementById('mobile-mode-value')!;
 const mcPause = document.getElementById('mc-pause') as HTMLButtonElement;
 const mcHelp = document.getElementById('mc-help') as HTMLButtonElement;
 const mcQuit = document.getElementById('mc-quit') as HTMLButtonElement;
@@ -345,22 +348,31 @@ function startGame(mode: GameMode) {
 
     // Mode-specific setup
     modeDisplay.classList.remove('hidden');
+    mobileModeDisplay.classList.remove('hidden');
+
     switch(gameMode) {
         case 'sprint':
             sprintLinesToGo = 40;
             modeLabel.textContent = "LINES";
+            mobileModeLabel.textContent = "LINES";
             levelEl.parentElement!.classList.add('hidden');
+            mobileLevelEl.parentElement!.classList.add('hidden');
+            linesEl.parentElement!.classList.remove('hidden');
             break;
         case 'ultra':
             ultraTimer = 3 * 60 * 1000; // 3 minutes
             modeLabel.textContent = "TIME";
+            mobileModeLabel.textContent = "TIME";
             levelEl.parentElement!.classList.add('hidden');
+            mobileLevelEl.parentElement!.classList.add('hidden');
             linesEl.parentElement!.classList.add('hidden');
             break;
         case 'marathon':
         default:
             modeDisplay.classList.add('hidden');
+            mobileModeDisplay.classList.add('hidden');
             levelEl.parentElement!.classList.remove('hidden');
+            mobileLevelEl.parentElement!.classList.remove('hidden');
             linesEl.parentElement!.classList.remove('hidden');
             break;
     }
@@ -772,11 +784,15 @@ function updateUI() {
     mobileLevelEl.textContent = level.toString();
     // Mode specific UI
     if (gameMode === 'sprint') {
-        modeValue.textContent = Math.max(0, sprintLinesToGo).toString();
+        const val = Math.max(0, sprintLinesToGo).toString();
+        modeValue.textContent = val;
+        mobileModeValue.textContent = val;
     } else if (gameMode === 'ultra') {
         const minutes = Math.floor(ultraTimer / 60000);
         const seconds = Math.floor((ultraTimer % 60000) / 1000);
-        modeValue.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const val = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        modeValue.textContent = val;
+        mobileModeValue.textContent = val;
     }
 }
 
