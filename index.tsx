@@ -1,9 +1,12 @@
 
+
 // Game constants
 const COLS = 10;
 const ROWS = 20;
 const LINE_CLEAR_ANIMATION_DURATION = 300; // ms
 const PIECE_LOCK_FLASH_DURATION = 100; // ms
+const GARBAGE_BLOCK_VALUE = 8;
+
 
 // --- DOM ELEMENT GETTERS ---
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -18,9 +21,9 @@ const levelEl = document.getElementById('level')!;
 const highScoreEl = document.getElementById('high-score')!;
 const mobileScoreEl = document.getElementById('mobile-score')!;
 const mobileLevelEl = document.getElementById('mobile-level')!;
-const pauseButton = document.getElementById('pause-button')!;
-const quitButton = document.getElementById('quit-button')!;
-const helpButton = document.getElementById('help-button')!;
+const pauseButton = document.getElementById('pause-button') as HTMLButtonElement;
+const quitButton = document.getElementById('quit-button') as HTMLButtonElement;
+const helpButton = document.getElementById('help-button') as HTMLButtonElement;
 const gameContainer = document.getElementById('game-container')!;
 const modeDisplay = document.getElementById('mode-display')!;
 const modeLabel = document.getElementById('mode-label')!;
@@ -28,6 +31,10 @@ const modeValue = document.getElementById('mode-value')!;
 const mobileModeDisplay = document.getElementById('mobile-mode-display')!;
 const mobileModeLabel = document.getElementById('mobile-mode-label')!;
 const mobileModeValue = document.getElementById('mobile-mode-value')!;
+const gameModeDisplayDesktopContainer = document.getElementById('game-mode-display-desktop-container')!;
+const gameModeDisplayDesktopEl = document.getElementById('game-mode-display-desktop')!;
+const gameModeDisplayMobileContainer = document.getElementById('game-mode-display-mobile-container')!;
+const gameModeDisplayMobileEl = document.getElementById('game-mode-display-mobile')!;
 const mcPause = document.getElementById('mc-pause') as HTMLButtonElement;
 const mcHelp = document.getElementById('mc-help') as HTMLButtonElement;
 const mcQuit = document.getElementById('mc-quit') as HTMLButtonElement;
@@ -38,38 +45,45 @@ const menuButtons = document.querySelectorAll<HTMLButtonElement>('#menu-button-g
 const menuMarathonButton = document.getElementById('menu-marathon-button')!;
 const menuSprintButton = document.getElementById('menu-sprint-button')!;
 const menuUltraButton = document.getElementById('menu-ultra-button')!;
+const menuPuzzleButton = document.getElementById('menu-puzzle-button')!;
+const menuSurvivalButton = document.getElementById('menu-survival-button')!;
+const menuAvalancheButton = document.getElementById('menu-avalanche-button')!;
 const menuHighScoresButton = document.getElementById('menu-high-scores-button')!;
 const menuSettingsButton = document.getElementById('menu-settings-button')!;
+const menuHelpButton = document.getElementById('menu-help-button')!;
 
 // Modal Elements
 const helpModal = document.getElementById('help-modal')!;
 const highScoresModal = document.getElementById('high-scores-modal')!;
 const settingsModal = document.getElementById('settings-modal')!;
 const highScoresTable = document.getElementById('high-scores-table')!;
+const highScoresTabs = document.getElementById('high-scores-tabs')!;
 const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
 const ghostStyleSelect = document.getElementById('ghost-style-select') as HTMLSelectElement;
 
 // --- TETROMINOES & PALETTES ---
 const SHAPES = [
-    [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], // I
-    [[2, 0, 0], [2, 2, 2], [0, 0, 0]],                         // J
-    [[0, 0, 3], [3, 3, 3], [0, 0, 0]],                         // L
-    [[4, 4], [4, 4]],                                         // O
-    [[0, 5, 5], [5, 5, 0], [0, 0, 0]],                         // S
-    [[0, 6, 0], [6, 6, 6], [0, 0, 0]],                         // T
-    [[7, 7, 0], [0, 7, 7], [0, 0, 0]],                         // Z
+    [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], // I (0)
+    [[2, 0, 0], [2, 2, 2], [0, 0, 0]],                         // J (1)
+    [[0, 0, 3], [3, 3, 3], [0, 0, 0]],                         // L (2)
+    [[4, 4], [4, 4]],                                         // O (3)
+    [[0, 5, 5], [5, 5, 0], [0, 0, 0]],                         // S (4)
+    [[0, 6, 0], [6, 6, 6], [0, 0, 0]],                         // T (5)
+    [[7, 7, 0], [0, 7, 7], [0, 0, 0]],                         // Z (6)
 ];
 const T_PIECE_INDEX = 5;
+const O_PIECE_INDEX = 3;
 
 const PALETTE = [
     { base: 'transparent', light: 'transparent', dark: 'transparent' },
-    { base: '#00bcd4', light: '#6ff9ff', dark: '#008ba3' }, // I (cyan)
-    { base: '#2196f3', light: '#6ec6ff', dark: '#0069c0' }, // J (blue)
-    { base: '#ff9800', light: '#ffc947', dark: '#c66900' }, // L (orange)
-    { base: '#ffeb3b', light: '#ffff72', dark: '#c8b900' }, // O (yellow)
-    { base: '#4caf50', light: '#80e27e', dark: '#087f23' }, // S (green)
-    { base: '#9c27b0', light: '#d05ce3', dark: '#6a0080' }, // T (purple)
-    { base: '#f44336', light: '#ff7961', dark: '#ba000d' }, // Z (red)
+    { base: '#00bcd4', light: '#6ff9ff', dark: '#008ba3' }, // 1: I (cyan)
+    { base: '#2196f3', light: '#6ec6ff', dark: '#0069c0' }, // 2: J (blue)
+    { base: '#ff9800', light: '#ffc947', dark: '#c66900' }, // 3: L (orange)
+    { base: '#ffeb3b', light: '#ffff72', dark: '#c8b900' }, // 4: O (yellow)
+    { base: '#4caf50', light: '#80e27e', dark: '#087f23' }, // 5: S (green)
+    { base: '#9c27b0', light: '#d05ce3', dark: '#6a0080' }, // 6: T (purple)
+    { base: '#f44336', light: '#ff7961', dark: '#ba000d' }, // 7: Z (red)
+    { base: '#757575', light: '#a4a4a4', dark: '#494949' }, // 8: Garbage
 ];
 
 const ACCENT_COLORS = ['#00bcd4', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#2196f3'];
@@ -81,7 +95,16 @@ type Piece = { x: number; y: number; shape: number[][]; shapeIndex: number; };
 type GhostStyle = 'off' | 'solid' | 'outline';
 type Settings = { volume: number; ghostStyle: GhostStyle; };
 type HighScore = { score: number; date: string; };
-type GameMode = 'marathon' | 'sprint' | 'ultra';
+type GameMode = 'marathon' | 'sprint' | 'ultra' | 'puzzle' | 'survival' | 'avalanche';
+const GAME_MODE_NAMES: { [key in GameMode]: string } = {
+    marathon: 'Classic',
+    sprint: 'Sprint (40L)',
+    ultra: 'Ultra (3 Min)',
+    puzzle: 'Puzzle',
+    survival: 'Survival',
+    avalanche: 'Avalanche'
+};
+
 
 // --- GAME STATE VARIABLES ---
 let grid: number[][];
@@ -93,7 +116,7 @@ let pieceBag: number[];
 let score: number;
 let lines: number;
 let level: number;
-let highScores: HighScore[];
+let highScores: { [key: string]: HighScore[] };
 let gameOver: boolean = true;
 let isPaused: boolean;
 let dropCounter: number;
@@ -109,9 +132,18 @@ let blockSize: number;
 let sideBlockSize: number;
 let settings: Settings;
 let gameMode: GameMode;
-let sprintLinesToGo: number;
-let ultraTimer: number; // in milliseconds
 let selectedMenuIndex: number = 0;
+let selectedPauseButtonIndex: number = 0;
+// Mode-specific state
+let sprintLinesToGo: number;
+let sprintTimer: number;
+let ultraTimer: number; // in milliseconds
+let turnsLeft: number;
+let garbageTimer: number;
+let garbageInterval: number;
+let garbageAmount: number;
+let isCascading: boolean;
+let comboCount: number;
 
 // --- SOUND FRAMEWORK (DEFINITIVE FIX) ---
 const soundManager = {
@@ -120,7 +152,7 @@ const soundManager = {
     loadSounds: function() {
         console.log("Attempting to load sound files...");
         // Only attempt to load sound files that are known to exist.
-        const soundFiles = ['clearLine', 'clearTetris', 'gameOver', 'hardDrop', 'levelUp', 'lock'];
+        const soundFiles = ['clearLine', 'clearTetris', 'gameOver', 'hardDrop', 'levelUp', 'lock', 'combo', 'move', 'rotate', 'softDrop', 'hold', 'pause'];
         
         // This is the key fix for the crash and for GitHub pages deployment
         const baseUrl = (typeof (import.meta as any).env !== 'undefined' && (import.meta as any).env.BASE_URL) 
@@ -172,8 +204,12 @@ function setupEventListeners() {
     menuMarathonButton.addEventListener('click', () => startGame('marathon'));
     menuSprintButton.addEventListener('click', () => startGame('sprint'));
     menuUltraButton.addEventListener('click', () => startGame('ultra'));
+    menuPuzzleButton.addEventListener('click', () => startGame('puzzle'));
+    menuSurvivalButton.addEventListener('click', () => startGame('survival'));
+    menuAvalancheButton.addEventListener('click', () => startGame('avalanche'));
     menuHighScoresButton.addEventListener('click', showHighScores);
     menuSettingsButton.addEventListener('click', showSettings);
+    menuHelpButton.addEventListener('click', showHelp);
 
     // In-Game Buttons
     pauseButton.addEventListener('click', togglePause);
@@ -210,6 +246,8 @@ function showMainMenu() {
     mainMenu.classList.remove('hidden');
     gameContainer.classList.add('hidden');
     modeDisplay.classList.add('hidden');
+    gameModeDisplayDesktopContainer.classList.add('hidden');
+    gameModeDisplayMobileContainer.classList.add('hidden');
     selectedMenuIndex = 0;
     updateMenuSelection();
 }
@@ -238,20 +276,64 @@ function showHelp() {
 }
 
 function showHighScores() {
+    const gameModesWithScores: GameMode[] = Object.keys(highScores) as GameMode[];
+    const allGameModes: { id: GameMode, name: string }[] = [
+        { id: 'marathon', name: 'Classic' },
+        { id: 'sprint', name: 'Sprint' },
+        { id: 'ultra', name: 'Ultra' },
+        { id: 'puzzle', name: 'Puzzle' },
+        { id: 'survival', name: 'Survival' },
+        { id: 'avalanche', name: 'Avalanche' },
+    ];
+
+    highScoresTabs.innerHTML = '';
+    let activeTabFound = false;
+
+    allGameModes.forEach(modeInfo => {
+        if (gameModesWithScores.includes(modeInfo.id)) {
+            const tabButton = document.createElement('button');
+            tabButton.className = 'hs-tab-btn';
+            tabButton.textContent = modeInfo.name;
+            tabButton.dataset.mode = modeInfo.id;
+            tabButton.addEventListener('click', () => renderHighScoreTable(modeInfo.id));
+            highScoresTabs.appendChild(tabButton);
+            if (!activeTabFound) {
+                tabButton.classList.add('active');
+                renderHighScoreTable(modeInfo.id);
+                activeTabFound = true;
+            }
+        }
+    });
+
+    if (!activeTabFound) {
+        highScoresTable.innerHTML = `<tbody><tr><td colspan="2">No scores yet!</td></tr></tbody>`;
+    }
+
+    highScoresModal.classList.remove('hidden');
+}
+
+function renderHighScoreTable(mode: GameMode) {
+    document.querySelectorAll('.hs-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', (btn as HTMLElement).dataset.mode === mode);
+    });
+
+    const scores = highScores[mode] || [];
     const tableBody = highScoresTable.querySelector('tbody');
     if (tableBody) tableBody.remove();
     const newBody = document.createElement('tbody');
-    if (highScores.length === 0) {
-        newBody.innerHTML = `<tr><td colspan="2">No scores yet!</td></tr>`;
+    
+    if (scores.length === 0) {
+        newBody.innerHTML = `<tr><td colspan="2">No scores for this mode!</td></tr>`;
     } else {
-        highScores.forEach((entry, index) => {
-            const row = `<tr><td>${index + 1}.</td><td>${entry.score}</td></tr>`;
+        scores.forEach((entry, index) => {
+            const scoreDisplay = mode === 'sprint' ? formatTime(entry.score) : entry.score.toString();
+            const row = `<tr><td>${index + 1}.</td><td>${scoreDisplay}</td></tr>`;
             newBody.innerHTML += row;
         });
     }
     highScoresTable.appendChild(newBody);
-    highScoresModal.classList.remove('hidden');
 }
+
 
 function showSettings() {
     if (animationFrameId && !isPaused && !gameOver) {
@@ -351,35 +433,71 @@ function startGame(mode: GameMode) {
     linesToClear = []; lineClearAnimationTimer = 0; pieceLockFlashTimer = 0;
     heldPiece = null; canHold = true;
     pieceBag = [];
+    isCascading = false;
+    comboCount = 0;
+    selectedPauseButtonIndex = 0; // Reset pause menu selection
+
+    // Display Game Mode
+    const gameModeName = GAME_MODE_NAMES[gameMode];
+    gameModeDisplayDesktopEl.textContent = gameModeName;
+    gameModeDisplayMobileEl.textContent = gameModeName;
+    gameModeDisplayDesktopContainer.classList.remove('hidden');
+    gameModeDisplayMobileContainer.classList.remove('hidden');
+
+    // Reset UI visibility
+    scoreEl.parentElement!.classList.remove('hidden');
+    mobileScoreEl.parentElement!.classList.remove('hidden');
+    levelEl.parentElement!.classList.remove('hidden');
+    mobileLevelEl.parentElement!.classList.remove('hidden');
+    linesEl.parentElement!.classList.remove('hidden');
+
 
     // Mode-specific setup
-    modeDisplay.classList.remove('hidden');
-    mobileModeDisplay.classList.remove('hidden');
+    modeDisplay.classList.add('hidden'); // Hide the dynamic value display by default
+    mobileModeDisplay.classList.add('hidden');
+    (linesEl.previousElementSibling as HTMLElement).textContent = "LINES";
+
 
     switch(gameMode) {
         case 'sprint':
             sprintLinesToGo = 40;
-            modeLabel.textContent = "LINES";
-            mobileModeLabel.textContent = "LINES";
+            sprintTimer = 0;
+            modeLabel.textContent = "TIME";
+            mobileModeLabel.textContent = "TIME";
+            modeDisplay.classList.remove('hidden');
+            mobileModeDisplay.classList.remove('hidden');
+            (linesEl.previousElementSibling as HTMLElement).textContent = "LINES LEFT";
             levelEl.parentElement!.classList.add('hidden');
             mobileLevelEl.parentElement!.classList.add('hidden');
-            linesEl.parentElement!.classList.remove('hidden');
+            scoreEl.parentElement!.classList.add('hidden');
+            mobileScoreEl.parentElement!.classList.add('hidden');
             break;
         case 'ultra':
             ultraTimer = 3 * 60 * 1000; // 3 minutes
             modeLabel.textContent = "TIME";
             mobileModeLabel.textContent = "TIME";
+            modeDisplay.classList.remove('hidden');
+            mobileModeDisplay.classList.remove('hidden');
             levelEl.parentElement!.classList.add('hidden');
             mobileLevelEl.parentElement!.classList.add('hidden');
             linesEl.parentElement!.classList.add('hidden');
             break;
+        case 'puzzle':
+            turnsLeft = 50;
+            modeLabel.textContent = "TURNS";
+            mobileModeLabel.textContent = "TURNS";
+            modeDisplay.classList.remove('hidden');
+            mobileModeDisplay.classList.remove('hidden');
+            break;
+        case 'survival':
+            garbageInterval = 10000;
+            garbageTimer = garbageInterval;
+            garbageAmount = 1;
+            break;
+        case 'avalanche':
         case 'marathon':
         default:
-            modeDisplay.classList.add('hidden');
-            mobileModeDisplay.classList.add('hidden');
-            levelEl.parentElement!.classList.remove('hidden');
-            mobileLevelEl.parentElement!.classList.remove('hidden');
-            linesEl.parentElement!.classList.remove('hidden');
+            // No special setup needed for these modes
             break;
     }
 
@@ -419,21 +537,29 @@ function animate(time = 0) {
         return;
     }
     
-    // On the first frame after starting, `lastTime` is 0 and `time` is a large timestamp.
-    // This creates a huge deltaTime, ending the game immediately in time-based modes.
-    // This fix resets the delta for the first frame to 0, effectively just syncing the timer.
     const deltaTime = (lastTime === 0) ? 0 : time - lastTime;
     lastTime = time;
 
     // Handle game mode timers
-    if (gameMode === 'ultra') {
+    if (gameMode === 'sprint') {
+        sprintTimer += deltaTime;
+        if (sprintLinesToGo <= 0) {
+            endGame();
+        }
+    } else if (gameMode === 'ultra') {
         ultraTimer -= deltaTime;
         if (ultraTimer <= 0) {
             ultraTimer = 0;
             endGame();
         }
-    } else if (gameMode === 'sprint' && sprintLinesToGo <= 0) {
-        endGame(); // You win!
+    } else if (gameMode === 'survival' && !isCascading) {
+        garbageTimer -= deltaTime;
+        if (garbageTimer <= 0) {
+            addGarbageLines(garbageAmount);
+            garbageInterval = Math.max(3000, garbageInterval * 0.97);
+            if (lines > 30 && lines % 10 === 0) garbageAmount = Math.min(4, garbageAmount + 1);
+            garbageTimer = garbageInterval;
+        }
     }
 
     // Handle animations first, they pause the game logic
@@ -442,34 +568,39 @@ function animate(time = 0) {
     if (linesToClear.length > 0) {
         lineClearAnimationTimer -= deltaTime;
         if (lineClearAnimationTimer <= 0) {
-            let linesCleared = linesToClear.length;
-            linesToClear.sort((a,b) => a - b).forEach(y => {
-                grid.splice(y, 1);
-                grid.unshift(Array(COLS).fill(0));
-            });
-            linesToClear = [];
-            updateScoreAndLevel(linesCleared);
-            resetPiece();
+            if (gameMode === 'avalanche') {
+                completeAvalancheClear();
+            } else {
+                let linesCleared = linesToClear.length;
+                linesToClear.sort((a,b) => a - b).forEach(y => {
+                    grid.splice(y, 1);
+                    grid.unshift(Array(COLS).fill(0));
+                });
+                linesToClear = [];
+                updateScoreAndLevel(linesCleared);
+                if (!gameOver) resetPiece();
+            }
         }
-    } else {
-        // Normal game logic only runs if not clearing lines
+    } else if (!isCascading) {
+        // Normal game logic only runs if not clearing lines or cascading
         dropCounter += deltaTime;
         if (dropCounter > dropInterval) {
             pieceDrop();
         }
     }
 
-    if (gameOver) return; // Prevent final draw from overwriting game over screen
+    if (gameOver) return;
     
     updateUI();
     draw();
 }
 
 function endGame() {
+    if(gameOver) return; // Prevent endGame from running multiple times
     gameOver = true;
     soundManager.play('gameOver');
     checkAndUpdateHighScore();
-    draw(); // Draw final state
+    draw();
     drawGameOver();
     cancelAnimationFrame(animationFrameId);
     animationFrameId = 0;
@@ -514,9 +645,25 @@ function resetNextPiece() {
     drawNextPiece();
 }
 
+function useTurn() {
+    if (gameMode !== 'puzzle' || gameOver) return;
+    if (turnsLeft > 0) {
+        turnsLeft--;
+        updateUI(); // Update immediately so user sees the count change
+        if (turnsLeft <= 0) {
+            // Use a short timeout to allow the final move to render before the game over screen appears
+            setTimeout(() => endGame(), 100);
+        }
+    }
+}
+
 function holdPiece() {
-    if (!canHold) return;
+    if (!canHold || gameOver) return;
+    if (gameMode === 'puzzle' && turnsLeft <= 0) return;
+
     soundManager.play('hold');
+    if (gameMode === 'puzzle') useTurn();
+    if(gameOver) return;
     
     const tempX = currentPiece.x, tempY = currentPiece.y;
     const pieceToHold = { shape: currentPiece.shape, shapeIndex: currentPiece.shapeIndex };
@@ -533,10 +680,12 @@ function holdPiece() {
         heldPiece = pieceToHold;
         canHold = false;
         drawHeldPiece();
+        updateUI();
     }
 }
 
 function pieceDrop() {
+    if (gameOver) return;
     if (!isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
         solidifyPiece();
     } else {
@@ -547,6 +696,7 @@ function pieceDrop() {
 }
 
 function pieceMove(dir: number) {
+    if (gameOver) return;
     if (isValidMove(currentPiece.shape, currentPiece.x + dir, currentPiece.y)) {
         currentPiece.x += dir;
         lastMoveWasRotation = false;
@@ -555,6 +705,11 @@ function pieceMove(dir: number) {
 }
 
 function pieceRotate() {
+    if (gameOver) return;
+    if (gameMode === 'puzzle' && currentPiece.shapeIndex === O_PIECE_INDEX) {
+        return; // Don't rotate or spend a turn on the O piece in puzzle mode
+    }
+    
     const rotated = rotateMatrix(currentPiece.shape);
     const kicks = [[0,0], [1,0], [-1,0], [2,0], [-2,0], [0,1], [0,-1]]; // Simple wall kicks
     for(const [offsetX, offsetY] of kicks) {
@@ -563,6 +718,9 @@ function pieceRotate() {
             currentPiece.y += offsetY;
             currentPiece.shape = rotated;
             lastMoveWasRotation = true;
+
+            if (gameMode === 'puzzle') useTurn();
+
             soundManager.play('rotate');
             return;
         }
@@ -601,9 +759,11 @@ function solidifyPiece() {
         });
     });
     
+    if (gameMode === 'puzzle') useTurn();
+
     clearLines(isTSpin);
     
-    if (linesToClear.length === 0) {
+    if (linesToClear.length === 0 && !gameOver) {
         if (isTSpin) {
             score += 400 * (level + 1);
             updateUI();
@@ -632,7 +792,7 @@ function draw() {
         });
     }
 
-    if (!gameOver && currentPiece) {
+    if (!gameOver && currentPiece && !isCascading) {
         if (settings.ghostStyle !== 'off') {
             let ghostY = currentPiece.y;
             while (isValidMove(currentPiece.shape, currentPiece.x, ghostY + 1)) ghostY++;
@@ -654,18 +814,32 @@ function draw() {
 function drawNextPiece() {
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
     if (!nextPiece) return;
-    const { shape } = nextPiece;
+    const { shape, shapeIndex } = nextPiece;
     const offsetX = (4 - shape[0].length) / 2;
-    const offsetY = (4 - shape.length) / 2;
+    let offsetY = (4 - shape.length) / 2;
+
+    // Adjust for vertical alignment to truly center the piece's shape, not its bounding box.
+    // The O piece is naturally centered. All others need a small push down.
+    if (shapeIndex !== O_PIECE_INDEX) {
+        offsetY += 0.5;
+    }
+
     drawMatrix(nextCtx, shape, offsetX, offsetY);
 }
 
 function drawHeldPiece() {
     holdCtx.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
     if (!heldPiece) return;
-    const { shape } = heldPiece;
+    const { shape, shapeIndex } = heldPiece;
     const offsetX = (4 - shape[0].length) / 2;
-    const offsetY = (4 - shape.length) / 2;
+    let offsetY = (4 - shape.length) / 2;
+
+    // Adjust for vertical alignment to truly center the piece's shape, not its bounding box.
+    // The O piece is naturally centered. All others need a small push down.
+    if (shapeIndex !== O_PIECE_INDEX) {
+        offsetY += 0.5;
+    }
+
     drawMatrix(holdCtx, shape, offsetX, offsetY);
 }
 
@@ -729,14 +903,19 @@ function drawGameOver() {
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
     let message = "GAME OVER";
-    if (gameMode === 'sprint' && sprintLinesToGo <= 0) message = "YOU WIN!";
     
-    ctx.font = '1.1px "Press Start 2P"';
+    if (gameMode === 'sprint' && sprintLinesToGo <= 0) {
+        message = "YOU WIN!";
+    } else if (gameMode === 'puzzle' && turnsLeft <= 0) {
+        message = "OUT OF TURNS";
+    }
+    
+    ctx.font = (message === "OUT OF TURNS") ? '0.9px "Press Start 2P"' : '1.1px "Press Start 2P"';
     ctx.fillText(message, COLS / 2, ROWS / 2 - 1.5);
     
-    ctx.font = '0.7px "Press Start 2P"';
-    ctx.fillText('Press any key', COLS / 2, ROWS / 2 + 1);
-    ctx.fillText('to continue', COLS / 2, ROWS / 2 + 2);
+    ctx.font = '0.55px "Press Start 2P"';
+    ctx.fillText('Click or press key', COLS / 2, ROWS / 2 + 1.2);
+    ctx.fillText('to continue', COLS / 2, ROWS / 2 + 2.2);
 }
 
 function drawPaused() {
@@ -751,6 +930,7 @@ function drawPaused() {
 
 // --- SCORING & LEVELING ---
 function checkTSpin(): boolean {
+    if (gameMode === 'avalanche') return false;
     if (currentPiece.shapeIndex !== T_PIECE_INDEX || !lastMoveWasRotation) return false;
     const cx = currentPiece.x + 1, cy = currentPiece.y + 1;
     const corners = [[cy - 1, cx - 1], [cy - 1, cx + 1], [cy + 1, cx - 1], [cy + 1, cx + 1]];
@@ -773,10 +953,16 @@ function clearLines(isTSpin: boolean) {
     });
 
     if (clearedCount > 0) {
+        if(gameMode === 'avalanche') isCascading = true;
         lineClearAnimationTimer = LINE_CLEAR_ANIMATION_DURATION;
         const T_SPIN_POINTS = [400, 800, 1200, 1600]; // T-Spin Mini, Single, Double, Triple
         const NORMAL_POINTS = [0, 100, 300, 500, 800]; // Single, Double, Triple, Tetris
-        score += (isTSpin ? T_SPIN_POINTS[clearedCount] : NORMAL_POINTS[clearedCount]) * (level + 1);
+        let scoreToAdd = (isTSpin ? T_SPIN_POINTS[clearedCount] : NORMAL_POINTS[clearedCount]) * (level + 1);
+        if (gameMode === 'avalanche' && comboCount > 0) {
+            scoreToAdd *= (1 + comboCount * 0.5); // Combo bonus
+            soundManager.play('combo');
+        }
+        score += Math.round(scoreToAdd);
         soundManager.play(clearedCount >= 4 ? 'clearTetris' : 'clearLine');
     }
 }
@@ -784,14 +970,16 @@ function clearLines(isTSpin: boolean) {
 function updateScoreAndLevel(linesCleared: number) {
      const previousLevel = level;
      lines += linesCleared;
-     if (gameMode === 'sprint') sprintLinesToGo -= linesCleared;
-     if (gameMode === 'marathon') {
+     if (gameMode === 'sprint') {
+        sprintLinesToGo -= linesCleared;
+     }
+     if (gameMode === 'marathon' || gameMode === 'survival' || gameMode === 'avalanche' || gameMode === 'puzzle') {
          level = Math.floor(lines / 10);
          if (level > previousLevel) {
              updateAccentColor(level);
              soundManager.play('levelUp');
          }
-         dropInterval = Math.max(200, 1000 - level * 75);
+         if(gameMode !== 'avalanche') dropInterval = Math.max(200, 1000 - level * 75);
      }
      updateUI();
 }
@@ -801,6 +989,15 @@ function updateAccentColor(newLevel: number) {
     document.documentElement.style.setProperty('--accent-color', color);
 }
 
+function formatTime(ms: number): string {
+    const totalSeconds = ms / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const milliseconds = Math.floor(ms % 1000);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+}
+
+
 function updateUI() {
     scoreEl.textContent = score.toString();
     mobileScoreEl.textContent = score.toString();
@@ -809,33 +1006,102 @@ function updateUI() {
     mobileLevelEl.textContent = level.toString();
     // Mode specific UI
     if (gameMode === 'sprint') {
-        const val = Math.max(0, sprintLinesToGo).toString();
+        const val = formatTime(sprintTimer);
         modeValue.textContent = val;
         mobileModeValue.textContent = val;
+        linesEl.textContent = Math.max(0, sprintLinesToGo).toString();
     } else if (gameMode === 'ultra') {
         const minutes = Math.floor(ultraTimer / 60000);
         const seconds = Math.floor((ultraTimer % 60000) / 1000);
         const val = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         modeValue.textContent = val;
         mobileModeValue.textContent = val;
+    } else if (gameMode === 'puzzle') {
+        const val = Math.max(0, turnsLeft).toString();
+        modeValue.textContent = val;
+        mobileModeValue.textContent = val;
     }
 }
+
+// --- MODE-SPECIFIC LOGIC ---
+
+function addGarbageLines(count: number) {
+    // Check for top out before adding lines
+    for (let y = 0; y < count; y++) {
+        for (let x = 0; x < COLS; x++) {
+            if (grid[y][x] !== 0) {
+                endGame();
+                return;
+            }
+        }
+    }
+
+    grid.splice(0, count);
+    const holePosition = Math.floor(Math.random() * COLS);
+    for (let i = 0; i < count; i++) {
+        const garbageRow = Array(COLS).fill(GARBAGE_BLOCK_VALUE).map((val, i) => i === holePosition ? 0 : val);
+        grid.push(garbageRow);
+    }
+}
+
+function completeAvalancheClear() {
+    comboCount++;
+    const linesClearedCount = linesToClear.length;
+    // Remove lines by setting them to 0
+    linesToClear.forEach(y => {
+        for(let x=0; x<COLS; x++) grid[y][x] = 0;
+    });
+    linesToClear = [];
+    settleBlocks();
+    updateScoreAndLevel(linesClearedCount);
+    
+    // Check for new lines after settling
+    grid.forEach((row, y) => {
+        if (row.every(value => value > 0)) {
+            linesToClear.push(y);
+        }
+    });
+
+    if (linesToClear.length > 0) {
+        // Another combo!
+        clearLines(false); // isTSpin is false for combos
+    } else {
+        // Combo ends
+        isCascading = false;
+        comboCount = 0;
+        resetPiece();
+    }
+    draw();
+}
+
+function settleBlocks() {
+    for (let x = 0; x < COLS; x++) {
+        let emptyRow = ROWS - 1;
+        for (let y = ROWS - 1; y >= 0; y--) {
+            if (grid[y][x] !== 0) {
+                if (y !== emptyRow) {
+                    grid[emptyRow][x] = grid[y][x];
+                    grid[y][x] = 0;
+                }
+                emptyRow--;
+            }
+        }
+    }
+}
+
 
 // --- DATA PERSISTENCE ---
 function loadSettings() {
     const savedString = localStorage.getItem('tetrisSettings');
     const saved = savedString ? JSON.parse(savedString) : null;
     
-    // Default settings
     const defaultSettings: Settings = { volume: 0.5, ghostStyle: 'solid' };
 
     if (saved) {
-        // Handle migration from old 'showGhost' boolean
         if (typeof (saved as any).showGhost !== 'undefined') {
             saved.ghostStyle = (saved as any).showGhost ? 'solid' : 'off';
-            delete (saved as any).showGhost; // clean up old property
+            delete (saved as any).showGhost;
         }
-        // Merge saved settings with defaults to ensure all properties exist
         settings = { ...defaultSettings, ...saved };
     } else {
         settings = defaultSettings;
@@ -853,7 +1119,7 @@ function saveSettings() {
 
 function loadHighScores() {
     const saved = localStorage.getItem('tetrisHighScores');
-    highScores = saved ? JSON.parse(saved) : [];
+    highScores = saved ? JSON.parse(saved) : {};
     updateHighScoreUI();
 }
 
@@ -862,18 +1128,39 @@ function saveHighScores() {
 }
 
 function checkAndUpdateHighScore() {
-    if (gameMode === 'sprint' && sprintLinesToGo > 0) return; // Don't save incomplete sprints
-    const newEntry: HighScore = { score, date: new Date().toISOString() };
-    highScores.push(newEntry);
-    highScores.sort((a, b) => b.score - a.score);
-    highScores = highScores.slice(0, 5);
+    // Don't save score if player quits Sprint mode early
+    if (gameMode === 'sprint' && sprintLinesToGo > 0) return;
+
+    const finalScore = (gameMode === 'sprint') ? sprintTimer : score;
+    const newEntry: HighScore = { score: finalScore, date: new Date().toISOString() };
+    
+    const modeScores = highScores[gameMode] || [];
+    modeScores.push(newEntry);
+
+    if (gameMode === 'sprint') {
+        // Lower time is better
+        modeScores.sort((a, b) => a.score - b.score);
+    } else {
+        // Higher score is better
+        modeScores.sort((a, b) => b.score - a.score);
+    }
+    
+    highScores[gameMode] = modeScores.slice(0, 5);
+    
     saveHighScores();
     updateHighScoreUI();
 }
 
 function updateHighScoreUI() {
-    highScoreEl.textContent = highScores.length > 0 ? highScores[0].score.toString() : '0';
+    if (!gameMode) return; // Don't update if no game mode is selected yet
+    const currentModeScores = highScores[gameMode];
+    let hiScoreText = '0';
+    if (currentModeScores && currentModeScores.length > 0) {
+        hiScoreText = (gameMode === 'sprint') ? formatTime(currentModeScores[0].score) : currentModeScores[0].score.toString();
+    }
+    highScoreEl.textContent = hiScoreText;
 }
+
 
 // --- CONTROLS ---
 function togglePause() {
@@ -885,6 +1172,8 @@ function togglePause() {
     if (isPaused) {
         soundManager.play('pause');
         cancelAnimationFrame(animationFrameId);
+        selectedPauseButtonIndex = 0; // Reset focus to the first button
+        updatePauseMenuSelection();
         drawPaused();
     } else {
         lastTime = performance.now();
@@ -895,6 +1184,16 @@ function togglePause() {
     mcPause.textContent = isPaused ? '▶' : '❚❚';
 }
 
+function updatePauseMenuSelection() {
+    const buttons = [pauseButton, quitButton, helpButton];
+    buttons.forEach((button, index) => {
+        if (index === selectedPauseButtonIndex) {
+            button.focus();
+        }
+    });
+}
+
+
 function setupMobileControls() {
     const mcLeft = document.getElementById('mc-left');
     const mcRight = document.getElementById('mc-right');
@@ -903,7 +1202,6 @@ function setupMobileControls() {
     const mcHardDrop = document.getElementById('mc-hard-drop');
     const mcHold = document.getElementById('mc-hold');
 
-    // Early exit if controls aren't in the DOM
     if (!mcLeft || !mcRight || !mcDown || !mcRotate || !mcHardDrop || !mcHold || !mcPause || !mcHelp || !mcQuit) {
         return;
     }
@@ -915,13 +1213,10 @@ function setupMobileControls() {
     }
 
     const handleControlPress = (action: Function, sound?: string) => {
-        // The event type is widened to accept both Touch and Mouse events.
         const handler = (event: TouchEvent | MouseEvent) => {
-            event.preventDefault(); // Prevents default actions like scrolling or text selection
-            vibrate(); // Haptic feedback on every press
-            // Guard clause: only allow actions during active gameplay
-            if (isPaused || gameOver || linesToClear.length > 0 || !!document.querySelector('.modal:not(.hidden)')) {
-                // Allow help and pause to work even when paused
+            event.preventDefault();
+            vibrate();
+            if (isPaused || gameOver || linesToClear.length > 0 || isCascading || !!document.querySelector('.modal:not(.hidden)')) {
                 if (action !== togglePause && action !== showHelp) {
                     return;
                 }
@@ -940,7 +1235,6 @@ function setupMobileControls() {
         solidifyPiece();
     };
 
-    // Helper to add both touch and mouse listeners
     const addControlListeners = (element: HTMLElement, handler: (event: TouchEvent | MouseEvent) => void) => {
         element.addEventListener('touchstart', handler, { passive: false });
         element.addEventListener('mousedown', handler, { passive: false });
@@ -962,7 +1256,6 @@ function handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
     const isMainMenuVisible = !mainMenu.classList.contains('hidden');
 
-    // State 1: Main Menu is active
     if (isMainMenuVisible) {
         event.preventDefault();
         switch (key) {
@@ -981,25 +1274,46 @@ function handleKeyPress(event: KeyboardEvent) {
         return;
     }
     
-    // State 2: Game Over screen is showing
     if (gameOver) {
-        if (animationFrameId === 0) { // Ensures the game loop has fully stopped
+        if (animationFrameId === 0) {
             showMainMenu();
         }
         return;
     }
 
-    // State 3: A modal is open
     const isModalOpen = !!document.querySelector('.modal:not(.hidden)');
     if (isModalOpen) {
         if (key === 'escape') {
             event.preventDefault();
             closeModalAndResume();
         }
-        return; // Absorb all other key presses when a modal is open.
+        return;
+    }
+    
+    if (isPaused) {
+        event.preventDefault();
+        const pauseButtons = [pauseButton, quitButton, helpButton];
+        switch (key) {
+            case 'arrowdown':
+                selectedPauseButtonIndex = (selectedPauseButtonIndex + 1) % pauseButtons.length;
+                updatePauseMenuSelection();
+                break;
+            case 'arrowup':
+                selectedPauseButtonIndex = (selectedPauseButtonIndex - 1 + pauseButtons.length) % pauseButtons.length;
+                updatePauseMenuSelection();
+                break;
+            case 'enter':
+                pauseButtons[selectedPauseButtonIndex].click();
+                break;
+            case 'p':
+            case 'escape':
+                togglePause();
+                break;
+        }
+        return;
     }
 
-    // State 4: In-game global controls
+
     if (key === 'h') { event.preventDefault(); showHelp(); return; }
     if (key === 'p' || key === 'escape') {
         event.preventDefault();
@@ -1007,12 +1321,10 @@ function handleKeyPress(event: KeyboardEvent) {
         return;
     }
     
-    // If the game is paused or in a line-clearing animation, block piece movement.
-    if (isPaused || linesToClear.length > 0) {
+    if (linesToClear.length > 0 || isCascading) {
         return;
     }
 
-    // State 5: Active Gameplay Controls
     switch (key) {
         case 'arrowleft': event.preventDefault(); pieceMove(-1); break;
         case 'arrowright': event.preventDefault(); pieceMove(1); break;

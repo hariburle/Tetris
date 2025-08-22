@@ -22,17 +22,32 @@
     <div id="main-menu">
         <h1>TETRIS</h1>
         <div id="menu-button-group">
-            <div class="tooltip-container" data-tooltip="Classic Tetris. Clear lines to level up and increase speed. No time limit.">
-                <button id="menu-marathon-button">Classic</button>
+            <div id="menu-modes-group">
+                <div class="tooltip-container" data-tooltip="Classic Tetris. Clear lines to level up and increase speed. No time limit.">
+                    <button id="menu-marathon-button">Classic</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Clear 40 lines as fast as possible. Your time is your score—lower is better!">
+                    <button id="menu-sprint-button">Sprint (40L)</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Score as many points as possible in 3 minutes. Speed does not increase.">
+                    <button id="menu-ultra-button">Ultra (3 Min)</button>
+                </div>
+                 <div class="tooltip-container" data-tooltip="Score as high as you can within 50 turns. Piece placement, holds, and rotations (except for the square piece) cost turns.">
+                    <button id="menu-puzzle-button">Puzzle</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Garbage lines rise from the bottom. Survive the onslaught for as long as you can.">
+                    <button id="menu-survival-button">Survival</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Cleared lines cause blocks above to fall, creating chain-reaction combos.">
+                    <button id="menu-avalanche-button">Avalanche</button>
+                </div>
             </div>
-            <div class="tooltip-container" data-tooltip="Clear 40 lines as fast as you can. The timer stops when you clear the 40th line.">
-                <button id="menu-sprint-button">Sprint (40L)</button>
+            <hr class="menu-separator">
+            <div id="menu-options-group">
+                <button id="menu-high-scores-button">High Scores</button>
+                <button id="menu-settings-button">Settings</button>
+                <button id="menu-help-button">Help</button>
             </div>
-            <div class="tooltip-container" data-tooltip="Score as many points as possible in 3 minutes. Speed does not increase.">
-                <button id="menu-ultra-button">Ultra (3 Min)</button>
-            </div>
-            <button id="menu-high-scores-button">High Scores</button>
-            <button id="menu-settings-button">Settings</button>
         </div>
     </div>
 
@@ -40,6 +55,9 @@
     <div id="game-container" class="hidden">
         <div id="mobile-header">
             <h1>TETRIS</h1>
+            <div id="game-mode-display-mobile-container" class="hidden">
+                 <p id="game-mode-display-mobile"></p>
+            </div>
             <div class="stats-numerical">
                  <div>
                     <h2>SCORE</h2>
@@ -58,7 +76,13 @@
 
         <canvas id="game-canvas"></canvas>
         <div id="side-panel">
-            <h1 class="desktop-only">TETRIS</h1>
+            <div class="side-panel-header">
+                <h1 class="desktop-only">TETRIS</h1>
+                <div id="game-mode-display-desktop-container" class="hidden">
+                    <h2>MODE</h2>
+                    <p id="game-mode-display-desktop"></p>
+                </div>
+            </div>
             <div id="stats-grid">
                 <div class="stats-numerical desktop-only">
                     <div>
@@ -130,6 +154,7 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>High Scores</h2>
+            <div id="high-scores-tabs"></div>
             <table id="high-scores-table">
                 <!-- Scores will be populated by JS -->
             </table>
