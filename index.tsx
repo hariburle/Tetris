@@ -1,5 +1,3 @@
-
-
 // Game constants
 const COLS = 10;
 const ROWS = 20;
@@ -19,8 +17,6 @@ const scoreEl = document.getElementById('score')!;
 const linesEl = document.getElementById('lines')!;
 const levelEl = document.getElementById('level')!;
 const highScoreEl = document.getElementById('high-score')!;
-const mobileScoreEl = document.getElementById('mobile-score')!;
-const mobileLevelEl = document.getElementById('mobile-level')!;
 const pauseButton = document.getElementById('pause-button') as HTMLButtonElement;
 const quitButton = document.getElementById('quit-button') as HTMLButtonElement;
 const helpButton = document.getElementById('help-button') as HTMLButtonElement;
@@ -28,13 +24,8 @@ const gameContainer = document.getElementById('game-container')!;
 const modeDisplay = document.getElementById('mode-display')!;
 const modeLabel = document.getElementById('mode-label')!;
 const modeValue = document.getElementById('mode-value')!;
-const mobileModeDisplay = document.getElementById('mobile-mode-display')!;
-const mobileModeLabel = document.getElementById('mobile-mode-label')!;
-const mobileModeValue = document.getElementById('mobile-mode-value')!;
 const gameModeDisplayDesktopContainer = document.getElementById('game-mode-display-desktop-container')!;
 const gameModeDisplayDesktopEl = document.getElementById('game-mode-display-desktop')!;
-const gameModeDisplayMobileContainer = document.getElementById('game-mode-display-mobile-container')!;
-const gameModeDisplayMobileEl = document.getElementById('game-mode-display-mobile')!;
 const mcPause = document.getElementById('mc-pause') as HTMLButtonElement;
 const mcHelp = document.getElementById('mc-help') as HTMLButtonElement;
 const mcQuit = document.getElementById('mc-quit') as HTMLButtonElement;
@@ -56,6 +47,12 @@ const menuHelpButton = document.getElementById('menu-help-button')!;
 const helpModal = document.getElementById('help-modal')!;
 const highScoresModal = document.getElementById('high-scores-modal')!;
 const settingsModal = document.getElementById('settings-modal')!;
+const gameOverModal = document.getElementById('game-over-modal')!;
+const gameOverTitle = document.getElementById('game-over-title')!;
+const gameOverScore = document.getElementById('game-over-score')!;
+const gameOverHighScore = document.getElementById('game-over-high-score')!;
+const gameOverRestartButton = document.getElementById('game-over-restart-button')!;
+const gameOverMenuButton = document.getElementById('game-over-menu-button')!;
 const highScoresTable = document.getElementById('high-scores-table')!;
 const highScoresTabs = document.getElementById('high-scores-tabs')!;
 const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
@@ -134,6 +131,10 @@ let settings: Settings;
 let gameMode: GameMode;
 let selectedMenuIndex: number = 0;
 let selectedPauseButtonIndex: number = 0;
+// Touch controls state
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
 // Mode-specific state
 let sprintLinesToGo: number;
 let sprintTimer: number;
@@ -220,6 +221,9 @@ function setupEventListeners() {
     document.querySelectorAll('.close-button').forEach(btn => {
         btn.addEventListener('click', closeModalAndResume);
     });
+    gameOverRestartButton.addEventListener('click', () => startGame(gameMode));
+    gameOverMenuButton.addEventListener('click', quitGame);
+
 
     // Settings
     volumeSlider.addEventListener('input', (e) => {
@@ -237,17 +241,17 @@ function setupEventListeners() {
     document.addEventListener('keydown', handleKeyPress);
     window.addEventListener('resize', handleResize);
     setupMobileControls();
+    setupSwipeControls();
+    setupMouseControls();
 }
 
 // --- UI & SCREEN MANAGEMENT ---
 function showMainMenu() {
-    canvas.removeEventListener('click', showMainMenu);
     document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
     mainMenu.classList.remove('hidden');
     gameContainer.classList.add('hidden');
     modeDisplay.classList.add('hidden');
     gameModeDisplayDesktopContainer.classList.add('hidden');
-    gameModeDisplayMobileContainer.classList.add('hidden');
     selectedMenuIndex = 0;
     updateMenuSelection();
 }
@@ -358,65 +362,67 @@ function closeModalAndResume() {
 
 
 function handleResize() {
-    const vh = window.innerHeight;
-    const gameAreaRect = gameContainer.getBoundingClientRect();
-    let availableWidth = gameAreaRect.width;
+    const isMobile = window.innerWidth <= 768;
+    const isPortrait = window.innerHeight > window.innerWidth;
 
-    if (window.innerWidth <= 768) { 
-        // Mobile layout logic: calculate available height precisely
+    if (isMobile && isPortrait) {
         const sidePanel = document.getElementById('side-panel')!;
-        const mobileHeader = document.getElementById('mobile-header')!;
-        const containerStyle = window.getComputedStyle(gameContainer);
-        const paddingTop = parseFloat(containerStyle.paddingTop);
-        const paddingBottom = parseFloat(containerStyle.paddingBottom);
-        const containerGap = parseFloat(containerStyle.gap);
-
-        // Calculate the total vertical space used by non-canvas elements
-        const otherElementsHeight = (window.innerHeight > window.innerWidth) // is portrait?
-            ? (mobileHeader.offsetHeight + sidePanel.offsetHeight + paddingTop + paddingBottom + containerGap)
-            : (paddingTop + paddingBottom + containerGap);
+        const bottomControls = document.getElementById('mobile-controls')!;
         
-        // The available height for the canvas is the viewport height minus everything else
-        const availableCanvasHeight = vh - otherElementsHeight;
-        
-        const blockFromHeight = Math.floor(availableCanvasHeight / ROWS);
-        const blockFromWidth = Math.floor((gameAreaRect.width * 0.95) / COLS);
+        // Ensure styles are computed
+        sidePanel.style.width = '90px'; // A fixed width for calculation
+        const sidePanelWidth = sidePanel.offsetWidth;
+        const bottomControlsHeight = bottomControls.offsetHeight;
+        const verticalPadding = 20;
+        const horizontalPadding = 16;
 
+        const availableHeight = window.innerHeight - bottomControlsHeight - verticalPadding;
+        const availableWidth = window.innerWidth - sidePanelWidth - horizontalPadding; 
+
+        const blockFromHeight = Math.floor(availableHeight / ROWS);
+        const blockFromWidth = Math.floor(availableWidth / COLS);
+        
         blockSize = Math.max(1, Math.min(blockFromHeight, blockFromWidth));
+        sideBlockSize = Math.floor(blockSize * 0.8);
 
-    } else {
-        // Desktop layout logic
-         availableWidth -= (220 + 32); // side panel width + gap
+    } else { // Desktop or Landscape
+        const vh = window.innerHeight;
+        const gameAreaRect = gameContainer.getBoundingClientRect();
+        let availableWidth = gameAreaRect.width;
+        if (!isMobile) { // Desktop
+             availableWidth -= (220 + 32); // side panel width + gap
+        }
         const blockFromHeight = Math.floor((vh * 0.9) / ROWS);
         const blockFromWidth = Math.floor((availableWidth * 0.95) / COLS);
         blockSize = Math.max(1, Math.min(blockFromHeight, blockFromWidth));
+        sideBlockSize = Math.floor(blockSize * 0.7);
     }
 
     canvas.width = COLS * blockSize;
     canvas.height = ROWS * blockSize;
-    
-    const sidePanel = document.getElementById('side-panel')!;
-    if (window.innerWidth > 768 || window.innerHeight < window.innerWidth) { // desktop or landscape
-        sidePanel.style.height = `${canvas.height}px`;
-    } else {
-        sidePanel.style.height = 'auto';
-    }
-    
     ctx.scale(blockSize, blockSize);
     
-    sideBlockSize = Math.floor(blockSize * 0.7);
+    // Reset side panel height for desktop
+    const sidePanel = document.getElementById('side-panel')!;
+     if (!isMobile || !isPortrait) {
+        sidePanel.style.height = `${canvas.height}px`;
+    } else {
+        sidePanel.style.height = 'auto'; // Let flexbox handle height on mobile
+    }
+    
     nextCanvas.width = 4 * sideBlockSize;
     nextCanvas.height = 4 * sideBlockSize;
     nextCtx.scale(sideBlockSize, sideBlockSize);
+
     holdCanvas.width = 4 * sideBlockSize;
     holdCanvas.height = 4 * sideBlockSize;
     holdCtx.scale(sideBlockSize, sideBlockSize);
     
     if (nextPiece) drawNextPiece();
     if (heldPiece) drawHeldPiece();
-    if (grid) { // Only draw if grid exists
+    if (grid) { 
         draw();
-        if (gameOver) drawGameOver();
+        if (gameOver) drawGameOverBackground();
     }
 }
 
@@ -440,21 +446,16 @@ function startGame(mode: GameMode) {
     // Display Game Mode
     const gameModeName = GAME_MODE_NAMES[gameMode];
     gameModeDisplayDesktopEl.textContent = gameModeName;
-    gameModeDisplayMobileEl.textContent = gameModeName;
     gameModeDisplayDesktopContainer.classList.remove('hidden');
-    gameModeDisplayMobileContainer.classList.remove('hidden');
 
     // Reset UI visibility
     scoreEl.parentElement!.classList.remove('hidden');
-    mobileScoreEl.parentElement!.classList.remove('hidden');
     levelEl.parentElement!.classList.remove('hidden');
-    mobileLevelEl.parentElement!.classList.remove('hidden');
     linesEl.parentElement!.classList.remove('hidden');
 
 
     // Mode-specific setup
     modeDisplay.classList.add('hidden'); // Hide the dynamic value display by default
-    mobileModeDisplay.classList.add('hidden');
     (linesEl.previousElementSibling as HTMLElement).textContent = "LINES";
 
 
@@ -463,31 +464,22 @@ function startGame(mode: GameMode) {
             sprintLinesToGo = 40;
             sprintTimer = 0;
             modeLabel.textContent = "TIME";
-            mobileModeLabel.textContent = "TIME";
             modeDisplay.classList.remove('hidden');
-            mobileModeDisplay.classList.remove('hidden');
             (linesEl.previousElementSibling as HTMLElement).textContent = "LINES LEFT";
             levelEl.parentElement!.classList.add('hidden');
-            mobileLevelEl.parentElement!.classList.add('hidden');
             scoreEl.parentElement!.classList.add('hidden');
-            mobileScoreEl.parentElement!.classList.add('hidden');
             break;
         case 'ultra':
             ultraTimer = 3 * 60 * 1000; // 3 minutes
             modeLabel.textContent = "TIME";
-            mobileModeLabel.textContent = "TIME";
             modeDisplay.classList.remove('hidden');
-            mobileModeDisplay.classList.remove('hidden');
             levelEl.parentElement!.classList.add('hidden');
-            mobileLevelEl.parentElement!.classList.add('hidden');
             linesEl.parentElement!.classList.add('hidden');
             break;
         case 'puzzle':
             turnsLeft = 50;
             modeLabel.textContent = "TURNS";
-            mobileModeLabel.textContent = "TURNS";
             modeDisplay.classList.remove('hidden');
-            mobileModeDisplay.classList.remove('hidden');
             break;
         case 'survival':
             garbageInterval = 10000;
@@ -600,13 +592,12 @@ function endGame() {
     gameOver = true;
     soundManager.play('gameOver');
     checkAndUpdateHighScore();
-    draw();
-    drawGameOver();
+    drawGameOverBackground();
+    showGameOverModal();
     cancelAnimationFrame(animationFrameId);
     animationFrameId = 0;
     quitButton.classList.add('hidden');
     mcQuit.classList.add('hidden');
-    canvas.addEventListener('click', showMainMenu);
 }
 
 
@@ -896,27 +887,34 @@ function drawGhostMatrix(context: CanvasRenderingContext2D, matrix: number[][], 
 }
 
 
-function drawGameOver() {
+function drawGameOverBackground() {
     drawMatrix(ctx, grid, 0, 0, GRAY_PALETTE);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     ctx.fillRect(0, 0, COLS, ROWS);
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
+}
+
+function showGameOverModal() {
     let message = "GAME OVER";
-    
     if (gameMode === 'sprint' && sprintLinesToGo <= 0) {
         message = "YOU WIN!";
     } else if (gameMode === 'puzzle' && turnsLeft <= 0) {
         message = "OUT OF TURNS";
     }
+    gameOverTitle.textContent = message;
+
+    const finalScore = (gameMode === 'sprint') ? formatTime(sprintTimer) : score.toString();
+    gameOverScore.textContent = finalScore;
     
-    ctx.font = (message === "OUT OF TURNS") ? '0.9px "Press Start 2P"' : '1.1px "Press Start 2P"';
-    ctx.fillText(message, COLS / 2, ROWS / 2 - 1.5);
-    
-    ctx.font = '0.55px "Press Start 2P"';
-    ctx.fillText('Click or press key', COLS / 2, ROWS / 2 + 1.2);
-    ctx.fillText('to continue', COLS / 2, ROWS / 2 + 2.2);
+    const modeScores = highScores[gameMode] || [];
+    let hiScoreText = (gameMode === 'sprint') ? 'N/A' : '0';
+    if (modeScores.length > 0) {
+        hiScoreText = (gameMode === 'sprint') ? formatTime(modeScores[0].score) : modeScores[0].score.toString();
+    }
+    gameOverHighScore.textContent = hiScoreText;
+
+    gameOverModal.classList.remove('hidden');
 }
+
 
 function drawPaused() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
@@ -999,27 +997,33 @@ function formatTime(ms: number): string {
 
 
 function updateUI() {
-    scoreEl.textContent = score.toString();
-    mobileScoreEl.textContent = score.toString();
-    linesEl.textContent = lines.toString();
-    levelEl.textContent = level.toString();
-    mobileLevelEl.textContent = level.toString();
+    const applyUpdateAnimation = (el: HTMLElement, newValue: string) => {
+        if (el.textContent !== newValue) {
+            el.textContent = newValue;
+            const parent = el.parentElement!;
+            if (parent.classList.contains('stat-update')) return; // a sibling might have just triggered it
+            parent.classList.add('stat-update');
+            parent.addEventListener('animationend', () => parent.classList.remove('stat-update'), { once: true });
+        }
+    };
+
+    applyUpdateAnimation(scoreEl, score.toString());
+    applyUpdateAnimation(linesEl, lines.toString());
+    applyUpdateAnimation(levelEl, level.toString());
+    
     // Mode specific UI
     if (gameMode === 'sprint') {
         const val = formatTime(sprintTimer);
         modeValue.textContent = val;
-        mobileModeValue.textContent = val;
         linesEl.textContent = Math.max(0, sprintLinesToGo).toString();
     } else if (gameMode === 'ultra') {
         const minutes = Math.floor(ultraTimer / 60000);
         const seconds = Math.floor((ultraTimer % 60000) / 1000);
         const val = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         modeValue.textContent = val;
-        mobileModeValue.textContent = val;
     } else if (gameMode === 'puzzle') {
         const val = Math.max(0, turnsLeft).toString();
         modeValue.textContent = val;
-        mobileModeValue.textContent = val;
     }
 }
 
@@ -1252,6 +1256,117 @@ function setupMobileControls() {
 }
 
 
+function setupSwipeControls() {
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+}
+
+function handleTouchStart(event: TouchEvent) {
+    event.preventDefault();
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+    touchStartTime = performance.now();
+}
+
+function handleTouchEnd(event: TouchEvent) {
+    event.preventDefault();
+    if (isPaused || gameOver || linesToClear.length > 0 || isCascading || !!document.querySelector('.modal:not(.hidden)')) {
+        return;
+    }
+
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+    const elapsedTime = performance.now() - touchStartTime;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    const minSwipeDist = 30; // pixels
+    const maxTapTime = 200; // ms
+    const maxTapDist = 10; // pixels
+    const hardDropVelocity = 1.0; // pixels/ms
+
+    if (elapsedTime < maxTapTime && Math.abs(deltaX) < maxTapDist && Math.abs(deltaY) < maxTapDist) {
+        pieceRotate();
+    } else if (Math.abs(deltaX) > Math.abs(deltaY)) { // Horizontal swipe
+        if (deltaX > minSwipeDist) pieceMove(1);
+        else if (deltaX < -minSwipeDist) pieceMove(-1);
+    } else { // Vertical swipe
+        if (deltaY > minSwipeDist) {
+            const velocity = deltaY / elapsedTime;
+            if (velocity > hardDropVelocity) {
+                while (isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+                    currentPiece.y++;
+                }
+                solidifyPiece();
+                soundManager.play('hardDrop');
+            } else {
+                pieceDrop();
+                soundManager.play('softDrop');
+            }
+        }
+    }
+    draw();
+}
+
+function setupMouseControls() {
+    const isMobile = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isMobile()) return; // Don't attach mouse controls on touch devices
+
+    let lastGridX = -1;
+
+    const handleMouseMove = (event: MouseEvent) => {
+        if (isPaused || gameOver || linesToClear.length > 0 || isCascading || !currentPiece) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const targetGridX = Math.floor(mouseX / blockSize) - Math.floor(currentPiece.shape[0].length / 2);
+
+        if (targetGridX !== lastGridX) {
+            const newX = targetGridX;
+            if (isValidMove(currentPiece.shape, newX, currentPiece.y)) {
+                currentPiece.x = newX;
+                draw();
+            }
+            lastGridX = targetGridX;
+        }
+    };
+
+    const handleMouseClick = (event: MouseEvent) => {
+        if (isPaused || gameOver || linesToClear.length > 0 || isCascading) return;
+        event.preventDefault();
+        if (event.button === 0) { // Left click: Hard Drop
+            while (isValidMove(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+                currentPiece.y++;
+            }
+            solidifyPiece();
+            soundManager.play('hardDrop');
+            draw();
+        }
+    };
+    
+    const handleRightClick = (event: MouseEvent) => {
+        if (isPaused || gameOver || linesToClear.length > 0 || isCascading) return;
+        event.preventDefault();
+        holdPiece();
+        draw();
+    };
+
+    const handleMouseWheel = (event: WheelEvent) => {
+        if (isPaused || gameOver || linesToClear.length > 0 || isCascading) return;
+        event.preventDefault();
+        pieceRotate();
+        draw();
+    };
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('click', handleMouseClick);
+    canvas.addEventListener('contextmenu', handleRightClick);
+    canvas.addEventListener('wheel', handleMouseWheel, { passive: false });
+}
+
+
 function handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
     const isMainMenuVisible = !mainMenu.classList.contains('hidden');
@@ -1276,7 +1391,7 @@ function handleKeyPress(event: KeyboardEvent) {
     
     if (gameOver) {
         if (animationFrameId === 0) {
-            showMainMenu();
+            // Game over modal handles continuation
         }
         return;
     }

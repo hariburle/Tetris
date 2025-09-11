@@ -1,5 +1,3 @@
-
-
 :root {
     --bg-color: #1a1a1a;
     --grid-bg-color: #0d0d0d;
@@ -69,9 +67,7 @@ body {
 
 #game-container {
     display: flex;
-    gap: 2rem;
     align-items: flex-start;
-    flex-wrap: nowrap;
     justify-content: center;
     width: 100%;
     height: 100%;
@@ -79,8 +75,11 @@ body {
     box-sizing: border-box;
 }
 
-#mobile-header {
-    display: none;
+#game-area-wrapper {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: nowrap; /* Prevent side panel from wrapping below canvas */
 }
 
 canvas {
@@ -134,10 +133,16 @@ canvas {
     padding: 1rem 0; /* Added vertical padding for better spacing */
 }
 
-.stats-numerical.desktop-only {
+.stats-numerical {
     display: flex;
     flex-direction: column;
     gap: 1.25rem; /* Added gap to space out stats */
+}
+
+.stats-previews {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 #side-panel h2 {
@@ -336,6 +341,12 @@ canvas {
     text-align: center;
     margin-top: 0;
 }
+.modal-content h3 {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 1rem;
+    color: var(--accent-color);
+}
 
 .controls-list p {
     background: none;
@@ -450,58 +461,45 @@ input[type="range"]::-webkit-slider-thumb {
   margin-top: -8px; 
 }
 
-/* Toggle Switch CSS */
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
+/* Game Over Modal Styles */
+.game-over-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin: 2rem 0;
 }
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+
+.game-over-stats h3 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem 0;
 }
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #555;
-    transition: .4s;
-    border-radius: 34px;
+
+.game-over-stats p {
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--accent-color);
 }
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
+
+.game-over-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
 }
-input:checked + .slider {
-    background-color: var(--accent-color);
+
+/* Stat Update Animation */
+@keyframes scale-up {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); color: var(--accent-color); }
+    100% { transform: scale(1); }
 }
-input:checked + .slider:before {
-    transform: translateX(26px);
+.stat-update p {
+    animation: scale-up 0.3s ease-in-out;
 }
+
 
 /* Mobile Touch Controls */
 #mobile-controls {
     display: none; /* Hidden on desktop */
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 0.5rem;
-    box-sizing: border-box;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent; /* Remove blue flash on tap */
@@ -510,6 +508,14 @@ input:checked + .slider:before {
 #mobile-utility-buttons {
     display: none;
 }
+
+.mobile-main-controls-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+}
+
 
 #d-pad {
     display: grid;
@@ -570,8 +576,8 @@ input:checked + .slider:before {
 
 @media (max-width: 768px) {
     body {
-        overflow-y: auto;
-        align-items: flex-start; /* Aligns content to the top */
+        overflow: hidden; /* No scrolling */
+        align-items: flex-start;
     }
     
     #main-menu h1 {
@@ -581,99 +587,106 @@ input:checked + .slider:before {
     #game-container {
         flex-direction: column;
         align-items: center;
-        gap: 1.5rem;
-        height: auto;
-        padding: 1rem 0.5rem;
-        padding-bottom: 150px; /* Increased padding to avoid overlap with mobile controls */
-    }
-    
-    #mobile-header {
-        display: block;
+        gap: 0.5rem;
+        height: 100vh; /* Fill screen vertically */
         width: 100%;
-        text-align: center;
+        padding: 0.5rem;
+        box-sizing: border-box;
     }
 
-    #mobile-header h1 {
-        font-size: 1.5rem;
-        color: var(--accent-color);
-        text-shadow: 0 0 10px var(--accent-color);
-        margin: 0 0 0.5rem 0;
-    }
-
-    #game-mode-display-mobile-container p {
-        background: none;
-        border: none;
-        padding: 0;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-        color: var(--text-color);
-        opacity: 0.8;
-    }
-
-    #mobile-header .stats-numerical {
+    /* Game area is now a row containing canvas and side panel */
+    #game-area-wrapper {
         display: flex;
-        justify-content: space-around;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.5rem;
         width: 100%;
-        max-width: 350px;
-        margin: 0 auto;
+        flex-grow: 1; /* This area takes up remaining vertical space */
+        min-height: 0; /* Crucial for flex-grow to work in a column */
     }
 
     .desktop-only {
-        display: none;
+        display: none !important;
     }
     
     #game-canvas {
         max-width: 100%;
+        max-height: 100%; /* Ensure canvas doesn't overflow its container */
+        flex-grow: 1;
+        min-width: 0; /* Allow canvas to shrink */
     }
 
+    /* --- MOBILE SIDE PANEL (RIGHT) --- */
     #side-panel {
+        display: flex;
         flex-direction: column;
+        justify-content: space-around;
         align-items: center;
-        width: 100%;
-        gap: 1rem;
-        min-width: unset;
+        width: 90px;
+        min-width: 90px;
+        height: 100%;
         padding: 0;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    /* Hide desktop-only elements in side panel */
+    #side-panel .side-panel-header,
+    #side-panel #mode-display {
+        display: none;
     }
     
     #stats-grid {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
-        width: 100%;
-        max-width: 350px;
-    }
-    
-    .stats-previews {
-        display: flex;
         justify-content: space-around;
+        flex-grow: 1;
         width: 100%;
-        margin-top: 2rem;
-    }
-
-    #stats-grid h2 {
-        font-size: 0.8rem;
+        padding: 0;
     }
     
-    #stats-grid p {
-        font-size: 1rem;
+    .stats-numerical, .stats-previews {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
     }
     
-    #button-group {
-        display: none;
+    #side-panel h2 {
+        font-size: 0.6rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    #side-panel p {
+        font-size: 0.7rem;
+        padding: 0.25rem;
     }
 
     #mobile-utility-buttons {
         display: flex;
         flex-direction: row;
         justify-content: center;
-        gap: 1.5rem;
-        margin-top: 1rem;
+        gap: 0.5rem;
+        width: 100%;
     }
 
+    #mobile-utility-buttons .mobile-btn.utility {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9rem;
+    }
+
+    /* --- MOBILE CONTROLS (BOTTOM) --- */
     #mobile-controls {
+        order: 2; /* Ensure it's at the bottom */
         display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        position: static;
+        width: 100%;
+        padding-top: 0.5rem;
+        background: none;
+        flex-shrink: 0; /* Prevent this from shrinking */
     }
 }
 
@@ -685,18 +698,33 @@ input:checked + .slider:before {
         justify-content: center;
         gap: 1rem;
         padding: 1rem;
-        padding-bottom: 100px; /* Space for controls */
+    }
+
+    #game-area-wrapper {
+        order: 0; /* Reset order */
+        flex-direction: row-reverse; /* Put side panel on the left */
+        align-items: flex-start;
+        flex-grow: 0;
     }
 
     #side-panel {
+        order: 0; /* Reset order */
         flex-direction: column;
         justify-content: space-between;
         width: 180px;
+        min-width: 180px; /* Explicitly set min-width */
         height: auto;
+    }
+    
+    #side-panel > * {
+        display: flex !important; /* Show all side-panel elements */
+    }
+    #side-panel #mode-display {
+        display: block !important;
     }
 
     #stats-grid {
-        display: flex;
+        display: flex !important; /* Override 'contents' */
         flex-direction: column;
         flex-grow: 1;
         gap: 0.5rem;
@@ -713,7 +741,28 @@ input:checked + .slider:before {
         display: block !important; /* Show all stats in landscape */
     }
 
+     #mobile-utility-buttons {
+        display: none;
+    }
+    
     #mobile-controls {
-        padding: 0.5rem 1rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column-reverse; /* Put main controls on bottom */
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 1.5rem;
+        pointer-events: none; /* Make container click-through */
+        background: none;
+    }
+
+    .mobile-main-controls-wrapper {
+        pointer-events: auto; /* Enable clicks on button groups */
+        width: auto;
+        gap: 1.5rem;
     }
 }
