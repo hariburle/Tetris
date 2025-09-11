@@ -8,6 +8,7 @@ const GARBAGE_BLOCK_VALUE = 8;
 
 // --- DOM ELEMENT GETTERS ---
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
+const canvasContainer = document.getElementById('canvas-container')!;
 const ctx = canvas.getContext('2d')!;
 const nextCanvas = document.getElementById('next-canvas') as HTMLCanvasElement;
 const nextCtx = nextCanvas.getContext('2d')!;
@@ -366,21 +367,13 @@ function handleResize() {
     const isPortrait = window.innerHeight > window.innerWidth;
 
     if (isMobile && isPortrait) {
-        const sidePanel = document.getElementById('side-panel')!;
-        const bottomControls = document.getElementById('mobile-controls')!;
+        // Measure the container provided by the CSS layout
+        const containerRect = canvasContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
         
-        // Ensure styles are computed
-        sidePanel.style.width = '90px'; // A fixed width for calculation
-        const sidePanelWidth = sidePanel.offsetWidth;
-        const bottomControlsHeight = bottomControls.offsetHeight;
-        const verticalPadding = 20;
-        const horizontalPadding = 16;
-
-        const availableHeight = window.innerHeight - bottomControlsHeight - verticalPadding;
-        const availableWidth = window.innerWidth - sidePanelWidth - horizontalPadding; 
-
-        const blockFromHeight = Math.floor(availableHeight / ROWS);
-        const blockFromWidth = Math.floor(availableWidth / COLS);
+        const blockFromHeight = Math.floor(containerHeight / ROWS);
+        const blockFromWidth = Math.floor(containerWidth / COLS);
         
         blockSize = Math.max(1, Math.min(blockFromHeight, blockFromWidth));
         sideBlockSize = Math.floor(blockSize * 0.8);

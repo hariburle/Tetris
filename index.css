@@ -588,7 +588,7 @@ input[type="range"]::-webkit-slider-thumb {
         flex-direction: column;
         align-items: center;
         gap: 0.5rem;
-        height: 100vh; /* Fill screen vertically */
+        height: 100%; /* Use 100% to fill parent, not 100vh */
         width: 100%;
         padding: 0.5rem;
         box-sizing: border-box;
@@ -598,7 +598,7 @@ input[type="range"]::-webkit-slider-thumb {
     #game-area-wrapper {
         display: flex;
         flex-direction: row;
-        align-items: flex-start;
+        align-items: stretch; /* Stretch items to fill height */
         gap: 0.5rem;
         width: 100%;
         flex-grow: 1; /* This area takes up remaining vertical space */
@@ -609,11 +609,18 @@ input[type="range"]::-webkit-slider-thumb {
         display: none !important;
     }
     
+    #canvas-container {
+        flex-grow: 1;
+        min-width: 0; /* Allow canvas to shrink */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
     #game-canvas {
         max-width: 100%;
         max-height: 100%; /* Ensure canvas doesn't overflow its container */
-        flex-grow: 1;
-        min-width: 0; /* Allow canvas to shrink */
     }
 
     /* --- MOBILE SIDE PANEL (RIGHT) --- */
@@ -705,6 +712,11 @@ input[type="range"]::-webkit-slider-thumb {
         flex-direction: row-reverse; /* Put side panel on the left */
         align-items: flex-start;
         flex-grow: 0;
+    }
+    
+    #canvas-container {
+        /* Reset mobile portrait styles if needed */
+        height: auto;
     }
 
     #side-panel {
