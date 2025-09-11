@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,94 +15,115 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/Tetris/assets/index-Bd7IScN0.js"></script>
-  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-UH0TNpHN.css">
+  <script type="module" crossorigin src="/Tetris/assets/index-B2nGMWe_.js"></script>
+  <link rel="stylesheet" crossorigin href="/Tetris/assets/index-DV5Sn_cS.css">
 </head>
 <body>
     <!-- Main Menu -->
     <div id="main-menu">
         <h1>TETRIS</h1>
         <div id="menu-button-group">
-            <div class="tooltip-container" data-tooltip="Classic Tetris. Clear lines to level up and increase speed. No time limit.">
-                <button id="menu-marathon-button">Classic</button>
+            <div id="menu-modes-group">
+                <div class="tooltip-container" data-tooltip="Classic Tetris. Clear lines to level up and increase speed. No time limit.">
+                    <button id="menu-marathon-button">Classic</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Clear 40 lines as fast as possible. Your time is your score—lower is better!">
+                    <button id="menu-sprint-button">Sprint (40L)</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Score as many points as possible in 3 minutes. Speed does not increase.">
+                    <button id="menu-ultra-button">Ultra (3 Min)</button>
+                </div>
+                 <div class="tooltip-container" data-tooltip="Score as high as you can within 50 turns. Piece placement, holds, and rotations (except for the square piece) cost turns.">
+                    <button id="menu-puzzle-button">Puzzle</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Garbage lines rise from the bottom. Survive the onslaught for as long as you can.">
+                    <button id="menu-survival-button">Survival</button>
+                </div>
+                <div class="tooltip-container" data-tooltip="Cleared lines cause blocks above to fall, creating chain-reaction combos.">
+                    <button id="menu-avalanche-button">Avalanche</button>
+                </div>
             </div>
-            <div class="tooltip-container" data-tooltip="Clear 40 lines as fast as you can. The timer stops when you clear the 40th line.">
-                <button id="menu-sprint-button">Sprint (40L)</button>
+            <hr class="menu-separator">
+            <div id="menu-options-group">
+                <button id="menu-high-scores-button">High Scores</button>
+                <button id="menu-settings-button">Settings</button>
+                <button id="menu-help-button">Help</button>
             </div>
-            <div class="tooltip-container" data-tooltip="Score as many points as possible in 3 minutes. Speed does not increase.">
-                <button id="menu-ultra-button">Ultra (3 Min)</button>
-            </div>
-            <button id="menu-high-scores-button">High Scores</button>
-            <button id="menu-settings-button">Settings</button>
         </div>
     </div>
 
     <!-- Game Container (hidden by default) -->
     <div id="game-container" class="hidden">
-        <div id="mobile-header">
-            <h1>TETRIS</h1>
-            <div class="stats-numerical">
-                 <div>
-                    <h2>SCORE</h2>
-                    <p id="mobile-score">0</p>
+        <div id="game-area-wrapper">
+            <canvas id="game-canvas"></canvas>
+            <div id="side-panel">
+                <div class="side-panel-header">
+                    <h1>TETRIS</h1>
+                    <div id="game-mode-display-desktop-container" class="hidden">
+                        <h2>MODE</h2>
+                        <p id="game-mode-display-desktop"></p>
+                    </div>
                 </div>
-                <div id="mobile-mode-display" class="hidden">
-                    <h2 id="mobile-mode-label">LINES</h2>
-                    <p id="mobile-mode-value">0</p>
+                <div id="stats-grid">
+                    <div class="stats-numerical">
+                        <div>
+                            <h2>SCORE</h2>
+                            <p id="score">0</p>
+                        </div>
+                        <div>
+                            <h2>LINES</h2>
+                            <p id="lines">0</p>
+                        </div>
+                        <div>
+                            <h2>LEVEL</h2>
+                            <p id="level">0</p>
+                        </div>
+                        <div>
+                            <h2>Hi Score</h2>
+                            <p id="high-score">0</p>
+                        </div>
+                    </div>
+                    <div class="stats-previews">
+                        <div>
+                            <h2>NEXT</h2>
+                            <canvas id="next-canvas"></canvas>
+                        </div>
+                        <div>
+                            <h2>HOLD</h2>
+                            <canvas id="hold-canvas"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h2>LEVEL</h2>
-                    <p id="mobile-level">0</p>
+                 <div id="mode-display" class="hidden">
+                    <h2 id="mode-label">TIME</h2>
+                    <p id="mode-value">0</p>
+                </div>
+                <div id="button-group" class="desktop-only">
+                    <button id="pause-button">Pause</button>
+                    <button id="quit-button" class="hidden">Quit</button>
+                    <button id="help-button">Help</button>
+                </div>
+                <div id="mobile-utility-buttons">
+                     <button id="mc-pause" class="mobile-btn utility">❚❚</button>
+                     <button id="mc-help" class="mobile-btn utility">?</button>
+                     <button id="mc-quit" class="mobile-btn utility hidden">X</button>
                 </div>
             </div>
         </div>
 
-        <canvas id="game-canvas"></canvas>
-        <div id="side-panel">
-            <h1 class="desktop-only">TETRIS</h1>
-            <div id="stats-grid">
-                <div class="stats-numerical desktop-only">
-                    <div>
-                        <h2>SCORE</h2>
-                        <p id="score">0</p>
-                    </div>
-                    <div>
-                        <h2>LINES</h2>
-                        <p id="lines">0</p>
-                    </div>
-                    <div>
-                        <h2>LEVEL</h2>
-                        <p id="level">0</p>
-                    </div>
-                    <div>
-                        <h2>Hi Score</h2>
-                        <p id="high-score">0</p>
-                    </div>
+        <!-- All mobile controls are now consolidated here -->
+        <div id="mobile-controls">
+            <div class="mobile-main-controls-wrapper">
+                <div id="d-pad">
+                    <button id="mc-rotate" class="mobile-btn">▲</button>
+                    <button id="mc-left" class="mobile-btn">◀</button>
+                    <button id="mc-down" class="mobile-btn">▼</button>
+                    <button id="mc-right" class="mobile-btn">▶</button>
                 </div>
-                <div class="stats-previews">
-                    <div>
-                        <h2>NEXT</h2>
-                        <canvas id="next-canvas"></canvas>
-                    </div>
-                    <div>
-                        <h2>HOLD</h2>
-                        <canvas id="hold-canvas"></canvas>
-                    </div>
+                <div id="action-buttons">
+                    <button id="mc-hard-drop" class="mobile-btn action">DROP</button>
+                    <button id="mc-hold" class="mobile-btn action">HOLD</button>
                 </div>
-            </div>
-             <div id="mode-display" class="hidden desktop-only">
-                <h2 id="mode-label">TIME</h2>
-                <p id="mode-value">0</p>
-            </div>
-            <div id="mobile-utility-buttons">
-                 <button id="mc-pause" class="mobile-btn utility">❚❚</button>
-                 <button id="mc-help" class="mobile-btn utility">?</button>
-                 <button id="mc-quit" class="mobile-btn utility hidden">X</button>
-            </div>
-            <div id="button-group">
-                <button id="pause-button">Pause</button>
-                <button id="quit-button" class="hidden">Quit</button>
-                <button id="help-button">Help</button>
             </div>
         </div>
     </div>
@@ -124,6 +144,13 @@
                 <p><strong>Q:</strong> Quit Game</p>
                 <p><strong>H:</strong> Show Help</p>
             </div>
+             <h3>Mouse Controls</h3>
+            <div class="controls-list">
+                <p><strong>Move Mouse:</strong> Move Piece</p>
+                <p><strong>Left Click:</strong> Hard Drop</p>
+                <p><strong>Right Click:</strong> Hold Piece</p>
+                <p><strong>Scroll Wheel:</strong> Rotate</p>
+            </div>
         </div>
     </div>
 
@@ -132,6 +159,7 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>High Scores</h2>
+            <div id="high-scores-tabs"></div>
             <table id="high-scores-table">
                 <!-- Scores will be populated by JS -->
             </table>
@@ -148,26 +176,34 @@
                 <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
             </div>
             <div class="setting-item">
-                <label for="ghost-toggle">Show Ghost Piece</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="ghost-toggle" checked>
-                    <span class="slider"></span>
-                </label>
+                <label for="ghost-style-select">Ghost Piece Style</label>
+                <select id="ghost-style-select" class="settings-select">
+                    <option value="solid">Solid</option>
+                    <option value="outline">Outline</option>
+                    <option value="off">Off</option>
+                </select>
             </div>
         </div>
     </div>
 
-    <!-- Mobile Touch Controls -->
-    <div id="mobile-controls">
-        <div id="d-pad">
-            <button id="mc-rotate" class="mobile-btn">▲</button>
-            <button id="mc-left" class="mobile-btn">◀</button>
-            <button id="mc-down" class="mobile-btn">▼</button>
-            <button id="mc-right" class="mobile-btn">▶</button>
-        </div>
-        <div id="action-buttons">
-            <button id="mc-hard-drop" class="mobile-btn action">DROP</button>
-            <button id="mc-hold" class="mobile-btn action">HOLD</button>
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="game-over-title">GAME OVER</h2>
+            <div class="game-over-stats">
+                <div>
+                    <h3>SCORE</h3>
+                    <p id="game-over-score">0</p>
+                </div>
+                <div>
+                    <h3>HIGH SCORE</h3>
+                    <p id="game-over-high-score">0</p>
+                </div>
+            </div>
+            <div class="game-over-buttons">
+                <button id="game-over-restart-button" class="menu-btn">Restart</button>
+                <button id="game-over-menu-button" class="menu-btn">Main Menu</button>
+            </div>
         </div>
     </div>
 
